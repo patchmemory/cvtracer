@@ -13,6 +13,7 @@ fname = "%s/data.dd" % folder
 
 try:
   f = open(fname,'rb')
+  print("\n\n  Data dictionary located. Unpickling %s \n" % fname)
   unpickler = pickle.Unpickler(f)
   dd = unpickler.load()
   f.close()
@@ -21,12 +22,15 @@ try:
 except FileNotFoundError:
 
   trials = sys.argv[1]
-  ns = [1, 2, 5, 10]
-  ts = ["SF", "Pa", "Ti", "Mo"]
+  ns = [ 1, 2, 5, 10 ]
+  ts = [ "SF", "Pa", "Ti", "Mo" ]
   vals = [ "dw", "speed", "omega" ]
+  obsv = { "dw":  0 , "speed":   1 , "omega":  2 }
+  vmin = { "dw":  0 , "speed":   0 , "omega":  0 }
+  vmax = { "dw": 55 , "speed": 100 , "omega": 20 }
   
   dd = DataDictionary()
-  print("  No data dictionary found, so generating from %s" % trials)
+  print("\n\n  No data dictionary found, so generating from %s \n" % trials)
   dd.load_list(trials,ns,ts)
   dd.print_sorted()
   
@@ -37,7 +41,7 @@ except FileNotFoundError:
   
       print("  Making speed cuts and combining data for %i %s... " % (n,t)) 
       dd.make_cuts(n,t,min_speed=1,d_min=0,n_buffer_frames=2)
-      mean_cut, err_cut, mean_vcut, err_vcut, mean_ocut, err_ocut = dd.frac_valid(n,t)
+      mean_cut, err_cut, mean_vcut, err_vcut, mean_ocut, err_ocut = dd.summarize_valid_frames(n,t)
 
       print("\n\n")
       print("# mean_cut err_cut mean_vcut err_vcut mean_ocut err_ocut")
@@ -48,13 +52,17 @@ except FileNotFoundError:
         print(" statistics for %s of %i %s" % (val,n,t))
         if val == 'omega':
           mean_mean, mean_err, std_mean, std_err, kurt_mean, kurt_err = \
-                                              dd.combine_trial_stats_symm(n,t,val)
+                       dd.combine_trial_stats_symm( n, t, val, 
+                                                    valmin=vmin[val], valmax=vmax[val],
+                                                    vcut=True, ocut=True )
           print("# mean_mean mean_err std_mean std_err kurt_mean kurt_err")
           print("%4.2e %4.2e %4.2e %4.2e %4.2e %4.2e " % (mean_mean, mean_err, std_mean, std_err, kurt_mean, kurt_err))
 
         else:
           print("# mean_mean mean_err")
-          mean_mean, mean_err = dd.combine_trial_stats(n,t,val)
+          mean_mean, mean_err = dd.combine_trial_stats( n, t, val, 
+                                                        valmin=vmin[val], valmax=vmax[val],
+                                                        vcut=True, ocut=True )
           print("%4.2e %4.2e" % (mean_mean, mean_err))
 
       print("\n")

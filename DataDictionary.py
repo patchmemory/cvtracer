@@ -174,7 +174,7 @@ class DataDictionary:
 
 
   # If speed and occlusion cuts are to be made, be sure to run them first!
-  def combine_trial_stats(self,n,t,val_name,valmin=None,valmax=None,vcut=None,ocut=None):
+  def combine_trial_stats(self,n,t,val_name,valmin=None,valmax=None,vcut=False,ocut=False):
     # first check to be sure cuts
     mean_arr = []
     for i_file in range(len(self.d['file'])):
@@ -182,7 +182,7 @@ class DataDictionary:
 
         mean_tmp, err_tmp = self.d['group'][i_file].calculate_stats(val_name,
                                   valmin, valmax, self.framei, self.framef, vcut, ocut)
-        print("  %4.2e %4.2e" % (mean_tmp, err_tmp))
+        print("  %4.2e %4.2e" % (mean_tmp, err_tmp) )
         mean_arr.append(mean_tmp)
 
     mean_arr  = np.array(mean_arr)
@@ -194,7 +194,7 @@ class DataDictionary:
     
 
   # If speed and occlusion cuts are to be made, be sure to run them first!
-  def combine_trial_stats_symm(self,n,t,val_name,valmin=None,valmax=None,vcut=None,ocut=None):
+  def combine_trial_stats_symm(self,n,t,val_name,valmin=None,valmax=None,vcut=False,ocut=False):
     # first check to make sure cuts
     mean_arr = []
     std_arr = []
@@ -558,7 +558,7 @@ class DataDictionary:
         print("  ... done.\n\n")
 
 
-  def frac_valid(self,n,t):
+  def summarize_valid_frames(self,n,t):
     keys = ['vcut', 'ocut', 'both']
     frac_valid = {}
     mean       = {}

@@ -32,15 +32,15 @@ class KinematicDataFrame:
     return self.df.loc[index,val]
 
   def cut_array(self,arr,vcut=False,ocut=False):
-    cut_arr = np.zeros_like(arr)
+    cut_arr = np.zeros_like(arr,dtype=bool)
     if vcut:
-      if 'speed_cut' not in self.df.colums:
+      if 'speed_cut' not in self.df.columns:
         print("\n No speed cut column found in DataFrame. Skipping speed cut.\n")
       else:
         vcut_arr = self.df['speed_cut']
         cut_arr = cut_arr | vcut_arr
     if ocut:
-      if 'd_cut' not in self.df.colums:
+      if 'd_cut' not in self.df.columns:
         print("\n No occlusion cut column found in DataFrame. Skipping occlusion cut.\n")
       else:
         ocut_arr = self.df['d_cut']
