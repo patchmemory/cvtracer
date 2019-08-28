@@ -153,6 +153,84 @@ class DataDictionary:
     return vals
 
 
+  def combined_trials(self,n,t,val):
+    vals = []
+    for i in range(len(self.d['file'])):
+      if self.d['n'][i] == n and self.d['type'][i] == t:
+        for i_fish in range(n):
+          try:
+            vals.extend(
+              self.d['group'][i].fish[i_fish].df[val][self.framei:self.framef].tolist() )
+          except TypeError:
+            fname = self.d['file'][i].split('/')[-1]
+            fdate = self.d['file'][i].split('/')[-2]
+            print("No data was found for %s/%s." % (fdate,fname))
+    vals = np.array(vals) 
+    self.combined_trials_stats(n,t,val,vals)
+    if val == 'omega':
+      vals = abs(vals)
+    self.val_d[self.val_d_key(n,t,val)] = vals
+    return vals
+
+
+  # If speed and occlusion cuts are to be made, be sure to run them first!
+  def combine_trial_stats(self,n,t,val_name,valmin=None,valmax=None,vcut=None,ocut=None):
+    # first check to be sure cuts
+    mean_arr = []
+    for i_file in range(len(self.d['file'])):
+      if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
+
+        mean_tmp, err_tmp = self.d['group'][i_file].calculate_stats(val_name,
+                                  valmin, valmax, self.framei, self.framef, vcut, ocut)
+        print("  %4.2e %4.2e" % (mean_tmp, err_tmp))
+        mean_arr.append(mean_tmp)
+
+    mean_arr  = np.array(mean_arr)
+    mean_mean = np.nanmean(mean_arr)
+    mean_err  = np.nanstd(mean_arr)/np.sqrt(sum(~np.isnan(mean_arr)))
+
+    self.val_d[self.val_d_key(n,t,"%s_mean" % val_name)] = [mean_mean, mean_err]
+    return mean_mean, mean_err
+    
+
+  # If speed and occlusion cuts are to be made, be sure to run them first!
+  def combine_trial_stats_symm(self,n,t,val_name,valmin=None,valmax=None,vcut=None,ocut=None):
+    # first check to make sure cuts
+    mean_arr = []
+    std_arr = []
+    kurt_arr = []
+    for i_file in range(len(self.d['file'])):
+      if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
+
+        mean_tmp, mean_err, std_tmp, std_err, kurt_tmp, kurt_err = \
+                                  self.d['group'][i_file].calculate_stats_symm(val_name,
+                                      valmin, valmax, self.framei, self.framef, vcut, ocut)
+        print("  %4.2e %4.2e %4.2e %4.2e %4.2e %4.2e" % 
+                            (mean_tmp, mean_err, std_tmp, std_err, kurt_tmp, kurt_err))
+
+        mean_arr.append(mean_tmp)
+        std_arr.append(std_tmp)
+        kurt_arr.append(kurt_tmp)
+
+    mean_arr  = np.array(mean_arr) 
+    mean_mean = np.nanmean(mean_arr)
+    mean_err  = np.nanstd(mean_arr) / np.sqrt(sum(~np.isnan(mean_arr)))
+    self.val_d[self.val_d_key(n,t,"%s_mean" % val_name)] = [mean_mean, mean_err]
+    
+    std_arr  = np.array(std_arr) 
+    std_mean = np.nanmean(std_arr)
+    std_err  = np.nanstd(std_arr) / np.sqrt(sum(~np.isnan(std_arr)))
+    self.val_d[self.val_d_key(n,t,"%s_std" % val_name)] = [std_mean, std_err]
+    
+    kurt_arr  = np.array(kurt_arr) 
+    kurt_mean = np.nanmean(kurt_arr)
+    kurt_err  = np.nanstd(kurt_arr) / np.sqrt(sum(~np.isnan(kurt_arr)))
+    self.val_d[self.val_d_key(n,t,"%s_kurt" % val_name)] = [kurt_mean, kurt_err]
+
+    return mean_mean, mean_err, std_mean, std_err, kurt_mean, kurt_err
+
+
+
   def trial_speed_cut(self,i_file,speed_cut=1.,n_buffer_frames=2):
     self.d['group'][i_file].speed_cut(speed_cut,n_buffer_frames)
 
@@ -415,6 +493,100 @@ class DataDictionary:
     else:
       print("  Only one fish in this trial, so no neighbors...")
       return 0,0,0,0
+
+  def analyze_neighbors(self,n,t,d_min=0,n_buffer_frames=2):
+    frac_valid_vcut = []
+    frac_valid_dcut = []
+    frac_valid_both = []
+    dij_mij = []
+    for i_file in range(len(self.d['file'])):
+      if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
+        print(self.d['file'][i_file])
+
+        if n > 1:
+          print("\n\n  Calculating neighbor distance and alignment...")
+          self.d['group'][i_file].calculate_distance_alignment()
+          print("  ... done.\n\n")
+         
+          print("\n\n  Making neighbor distance cut...")
+          self.d['group'][i_file].neighbor_distance_cut(d_min,n_buffer_frames)
+          dij_mij_tmp, frac_valid_both_tmp, frac_valid_vcut_tmp, frac_valid_dcut_tmp = self.d['group'][i_file].valid_distance_alignment(self.framei,self.framef)
+          dij_mij.extend(list(dij_mij_tmp))
+        else:
+          print("\n\n  Single fish, no neighbors... ")
+          self.d['group'][i_file].neighbor_distance_cut(d_min,n_buffer_frames)
+          dij_mij_tmp, frac_valid_both_tmp, frac_valid_vcut_tmp, frac_valid_dcut_tmp = self.d['group'][i_file].valid_distance_alignment(self.framei,self.framef)
+
+        frac_valid_vcut.append(frac_valid_vcut_tmp)
+        frac_valid_dcut.append(frac_valid_dcut_tmp)
+        frac_valid_both.append(frac_valid_both_tmp)
+        print("  ... done.\n\n")
+
+    val = 'dij_mij'
+    dij_mij = np.array(dij_mij)
+    self.val_d[self.val_d_key(n,t,val)] = dij_mij
+
+    val = 'frac_valid_vcut'
+    frac_valid_vcut = np.array(frac_valid_vcut)
+    self.val_d[self.val_d_key(n,t,val)] = frac_valid_vcut
+
+    val = 'frac_valid_dcut'
+    frac_valid_dcut = np.array(frac_valid_dcut)
+    self.val_d[self.val_d_key(n,t,val)] = frac_valid_dcut
+
+    val = 'frac_valid_both'
+    frac_valid_both = np.array(frac_valid_both)
+    self.val_d[self.val_d_key(n,t,val)] = frac_valid_both
+
+
+  def make_cuts(self,n,t,min_speed=1,d_min=0,n_buffer_frames=2):
+    for i_file in range(len(self.d['file'])):
+      if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
+        print(self.d['file'][i_file])
+        if n > 1:
+          try:
+            len(self.d['group'][i_file].d_M)
+            print("\n\n Neighbor distance and alignment found.")
+          except AttributeError:
+            print("\n\n  Calculating neighbor distance and alignment...")
+            self.d['group'][i_file].calculate_distance_alignment()
+            print("  ... done.\n\n")
+
+        self.d['group'][i_file].cut_occlusions(d_min,n_buffer_frames)
+        self.d['group'][i_file].cut_inactive(min_speed,n_buffer_frames)
+
+        print("  ... done.\n\n")
+
+
+  def frac_valid(self,n,t):
+    keys = ['vcut', 'ocut', 'both']
+    frac_valid = {}
+    mean       = {}
+    err        = {}
+    for key in keys:
+      frac_valid[key] = []
+      mean[key] = [] 
+      err[key]  = []
+
+    for i_file in range(len(self.d['file'])):
+      if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
+        print("\n\n  Determining valid portion of frames...")
+        print(self.d['file'][i_file])
+        frac_both, frac_both_err, \
+        frac_vcut, frac_vcut_err, \
+        frac_ocut, frac_ocut_err = self.d['group'][i_file].frac_valid(self.framei,self.framef) 
+        frac_valid['both'].append(1-frac_both)
+        frac_valid['vcut'].append(1-frac_vcut)
+        frac_valid['ocut'].append(1-frac_ocut)
+
+    for key in frac_valid:
+      frac_valid[key] = np.array(frac_valid[key])
+      mean[key] = np.mean(frac_valid[key])
+      err[key] = np.std(frac_valid[key])/np.sqrt(len(frac_valid[key]))
+      val = "frac_valid_%s" % key
+      self.val_d[self.val_d_key(n,t,val)] = [mean[key],err[key]] 
+
+    return mean['both'], err['both'], mean['vcut'], err['vcut'], mean['ocut'], err['ocut']
 
 
   def analyze_neighbors(self,n,t,d_min=0,n_buffer_frames=2):

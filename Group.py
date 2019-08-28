@@ -42,6 +42,53 @@ class Group:
     for i_fish in range(self.n_fish):
       self.fish[i_fish].print_frame(index)
 
+
+  def calculate_stats(self, val_name, valmin = None, valmax = None,
+                                     framei = 0, framef = None,
+                                     vcut = False, ocut = False):
+    mean_arr = [] 
+    for i_fish in range(self.n_fish):
+      mean_tmp, std_tmp = self.fish[i_fish].calculate_stats(val_name,
+                                              valmin, valmax, framei, framef, vcut, ocut)
+      print("    %4.2e %4.2e" % (mean_tmp,std_tmp))
+      mean_arr.append(mean_tmp) 
+
+    mean_arr  = np.array(mean_arr) 
+    mean_mean = np.nanmean(mean_arr)
+    mean_err  = np.nanstd(mean_arr) / np.sqrt(sum(~np.isnan(mean_arr)))
+
+    return mean_mean, mean_err
+
+
+  def calculate_stats_symm(self, val_name, valmin = None, valmax = None,
+                                     framei = 0, framef = None,
+                                     vcut = False, ocut = False):
+    mean_arr = [] 
+    std_arr = [] 
+    kurt_arr = [] 
+    for i_fish in range(self.n_fish):
+      mean_tmp, std_tmp, kurt_tmp = self.fish[i_fish].calculate_stats_symm(val_name,
+                                              valmin, valmax, framei, framef, vcut, ocut)
+      print("    %4.2e %4.2e %4.2e" % (mean_tmp,std_tmp,kurt_tmp))
+      mean_arr.append(mean_tmp) 
+      std_arr.append(std_tmp) 
+      kurt_arr.append(kurt_tmp) 
+
+    mean_arr  = np.array(mean_arr) 
+    mean_mean = np.nanmean(mean_arr)
+    mean_err  = np.nanstd(mean_arr) / np.sqrt(sum(~np.isnan(mean_arr)))
+
+    std_arr  = np.array(std_arr) 
+    std_mean = np.nanmean(std_arr)
+    std_err  = np.nanstd(std_arr) / np.sqrt(sum(~np.isnan(std_arr)))
+
+    kurt_arr  = np.array(kurt_arr) 
+    kurt_mean = np.nanmean(kurt_arr)
+    kurt_err  = np.nanstd(kurt_arr) / np.sqrt(sum(~np.isnan(kurt_arr)))
+
+    return mean_mean, mean_err, std_mean, std_err, kurt_mean, kurt_err 
+    
+
   def calculate_dwall(self,tank_radius):
     for i_fish in range(self.n_fish):
       self.fish[i_fish].calculate_dwall(tank_radius)
@@ -80,6 +127,13 @@ class Group:
 
   def speed_cut(self,speed_cut=1.,n_buffer_frames=2):
     for i_fish in range(self.n_fish):
+      self.fish[i_fish].speed_cut(speed_cut,n_buffer_frames)
+
+  def cut_inactive(self,speed_cut=1.,n_buffer_frames=2):
+    print("\n\n  Making speed cut at %4.2f cm/s with %i buffer frames" 
+                                                % (speed_cut,n_buffer_frames))
+    for i_fish in range(self.n_fish):
+      print("    ... for fish %i, " % i_fish)
       self.fish[i_fish].speed_cut(speed_cut,n_buffer_frames)
 
   def alignment(self,i,j,theta):
@@ -179,6 +233,34 @@ class Group:
     print("  Median N Distance = %f cm" % np.median(n_dist))
     print("                     %f std. body length" % (np.median(n_dist)/self.std_body_length))
     return n_dist
+
+
+  def cut_occlusions(self,d_min=0,n_buffer_frames=2):
+    if self.n_fish > 1:
+      for i_fish in range(self.n_fish):
+        distance_nn = self.d_M[i_fish][:,0]
+        distance_nn = distance_nn[:,0]
+        #print("distance_nn",distance_nn)
+        print("\n\n  Making occlusion cuts for fish %i via zeroed distances..." % i_fish)
+        self.fish[i_fish].distance_cut(distance_nn,d_min,n_buffer_frames)
+    else:
+      print("\n\n  No occlusion cuts to make for single fish.")
+      self.fish[0].distance_cut_null()
+    
+  def frac_valid(self,framei,framef):
+    frac_ocut = []
+    frac_vcut = []
+    frac_both = []
+    for i_fish in range(self.n_fish):
+      frac_ocut.append(self.fish[i_fish].total_frames_occlusion(framei,framef))
+      frac_vcut.append(self.fish[i_fish].total_frames_inactive(framei,framef))
+      frac_both.append(self.fish[i_fish].total_frames_cut(framei,framef))
+    frac_ocut = np.array(frac_ocut)
+    frac_vcut = np.array(frac_vcut)  
+    frac_both = np.array(frac_both) 
+    return np.mean(frac_both), np.std(frac_both)/np.sqrt(len(frac_both)), \
+           np.mean(frac_vcut), np.std(frac_vcut)/np.sqrt(len(frac_vcut)), \
+           np.mean(frac_ocut), np.std(frac_ocut)/np.sqrt(len(frac_ocut))
 
 
   # should move the cuts to their own routine
