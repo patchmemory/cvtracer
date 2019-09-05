@@ -1,9 +1,7 @@
 #!/usr/bin/python3
-import sys, math
 import numpy as np
 import matplotlib.pyplot as plt
-from Fish import KinematicDataFrame
-from KinematicDataFrame import KinematicDataFrame
+from Fish.Individual import Individual
 
 class Group: 
 
@@ -21,8 +19,7 @@ class Group:
     else:
       self.fish = np.empty(group_size)
       for i in range(group_size):
-        ish = KinematicDataFrame()
-        self.fish[i] = ish
+        self.fish[i] = Individual()
 
   def n_fish(self):
     return self.n_fish 
@@ -42,52 +39,7 @@ class Group:
     for i_fish in range(self.n_fish):
       self.fish[i_fish].print_frame(index)
 
-
-  def calculate_stats(self, val_name, valmin = None, valmax = None,
-                                     framei = 0, framef = None,
-                                     vcut = False, ocut = False):
-    mean_arr = [] 
-    for i_fish in range(self.n_fish):
-      mean_tmp, std_tmp = self.fish[i_fish].calculate_stats(val_name,
-                                              valmin, valmax, framei, framef, vcut, ocut)
-      print("    %4.2e %4.2e" % (mean_tmp,std_tmp))
-      mean_arr.append(mean_tmp) 
-
-    mean_arr  = np.array(mean_arr) 
-    mean_mean = np.nanmean(mean_arr)
-    mean_err  = np.nanstd(mean_arr) / np.sqrt(sum(~np.isnan(mean_arr)))
-
-    return mean_mean, mean_err
-
-
-  def calculate_stats_symm(self, val_name, valmin = None, valmax = None,
-                                     framei = 0, framef = None,
-                                     vcut = False, ocut = False):
-    mean_arr = [] 
-    std_arr = [] 
-    kurt_arr = [] 
-    for i_fish in range(self.n_fish):
-      mean_tmp, std_tmp, kurt_tmp = self.fish[i_fish].calculate_stats_symm(val_name,
-                                              valmin, valmax, framei, framef, vcut, ocut)
-      print("    %4.2e %4.2e %4.2e" % (mean_tmp,std_tmp,kurt_tmp))
-      mean_arr.append(mean_tmp) 
-      std_arr.append(std_tmp) 
-      kurt_arr.append(kurt_tmp) 
-
-    mean_arr  = np.array(mean_arr) 
-    mean_mean = np.nanmean(mean_arr)
-    mean_err  = np.nanstd(mean_arr) / np.sqrt(sum(~np.isnan(mean_arr)))
-
-    std_arr  = np.array(std_arr) 
-    std_mean = np.nanmean(std_arr)
-    std_err  = np.nanstd(std_arr) / np.sqrt(sum(~np.isnan(std_arr)))
-
-    kurt_arr  = np.array(kurt_arr) 
-    kurt_mean = np.nanmean(kurt_arr)
-    kurt_err  = np.nanstd(kurt_arr) / np.sqrt(sum(~np.isnan(kurt_arr)))
-
-    return mean_mean, mean_err, std_mean, std_err, kurt_mean, kurt_err 
-    
+  
 
   def calculate_dwall(self,tank_radius):
     for i_fish in range(self.n_fish):
@@ -156,7 +108,6 @@ class Group:
     x = np.array(x)
     y = np.array(y)
     e = np.array(e)
-    #print(len(x[0]),len(y[0]),len(e[0]))
 
     for frame in range(len(e[0])):
       xs_tmp     = x[:,frame]
@@ -176,7 +127,6 @@ class Group:
 
 
   def nearest_neighbor_distance_frame(self,i_frame): 
-    nn_dist_tmp = []
     print("i-frame=",i_frame)
     for i_fish in range(self.n_fish):
       print("i-fish=",i_fish)
@@ -309,7 +259,10 @@ class Group:
           dij_mij.append(d_M_cut[i][j])
 
     print("length of dij_mij",len(dij_mij))
-    return np.array(dij_mij), n_valid_both_tmp/n_total_tmp, n_valid_vcut_tmp/n_total_tmp, n_valid_dcut_tmp/n_total_tmp
+    return np.array(dij_mij), \
+           n_valid_both_tmp/n_total_tmp, \
+           n_valid_vcut_tmp/n_total_tmp, \
+           n_valid_dcut_tmp/n_total_tmp
 
 
   def neighbor_distance_cut(self,d_min=0,n_buffer_frames=2):
@@ -320,30 +273,38 @@ class Group:
         #print("distance_nn",distance_nn)
         self.fish[i_fish].distance_cut(distance_nn,d_min,n_buffer_frames)
     else:
-      self.fish[0].distance_cut_null()
+      self.fish[0].distance_cut_null()   
+
+
+  # input a list and return the mean and standard error, excluding NaN entries.
+  def mean_and_err(self,l):
+    l = np.array(l)   
+    return np.nanmean(l), np.nanstd(l)/np.sqrt(sum(~np.isnan(l)))
+
+  # calculate_stats(...) takes the name of a value and calculates its 
+  # statistics across individuals in the group. User can specify a range of 
+  # values and a range of time, along with whether or not to use speed and 
+  # occlusion cuts. Also has option to make data symmetric about the origin, 
+  # for use with angular speed statistics.
+  def calculate_stats(self, val_name, valmin = None, valmax = None,
+                      framei = 0, framef = None, vcut = False, ocut = False,
+                      symm = False):
+    means = []
+    stdds = []
+    kurts = []
+    for i_fish in range(self.n_fish):
+      mean_tmp, std_tmp, kurt_tmp = self.fish[i_fish].calculate_stats(val_name,
+                                             valmin, valmax, framei, framef, 
+                                             vcut, ocut, symm)
+      print("    %4.2e %4.2e %4.2e" % (mean_tmp,std_tmp,kurt_tmp))
+      means.append(mean_tmp) 
+      stdds.append(std_tmp) 
+      kurts.append(kurt_tmp) 
     
+    mean_mean, mean_err = self.mean_and_err(means)
+    stdd_mean, stdd_err = self.mean_and_err(stdds)
+    kurt_mean, kurt_err = self.mean_and_err(kurts)
 
-def main():
-  fname = sys.argv[1]
-  group_size = int(sys.argv[2])
-  group_type = sys.argv[3]
-  
-  grp = Group(group_size,group_type,fname)
-  grp.print()
-  grp.print_frame(10)
-  print("\n\n  Calculating alignment...")
-  grp.calculate_distance_alignment()
-  print("... done.\n\n")
+    return mean_mean, mean_err, stdd_mean, stdd_err, kurt_mean, kurt_err 
 
-  fps = 30
-  ti = 10*60 #sec
-  tf = 30*60 #sec
-  framei = ti*fps
-  framef = tf*fps
-  print("\n\n  Calculating nearest neighbor distance and alignment...")
-  grp.nearest_neighbor_distance(framei,framef)
-  #grp.plot_nn_dist()
-  grp.neighbor_distance(framei,framef)
-  print("... done.\n\n")
 
-#main()

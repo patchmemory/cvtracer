@@ -1,10 +1,11 @@
 #!/usr/bin/python3
-import sys, math
+import math
 import numpy as np
 import pandas as pd
 import scipy.stats as spstats
 
-class KinematicDataFrame:
+
+class Individual:
 
   def __init__(self):
     d = {'t': [], 'x': [], 'y': [], 'theta': [] }
@@ -13,98 +14,44 @@ class KinematicDataFrame:
 
   def n_entries(self):
     return len(self.df.index)
+
+  def print(self):
+    print(self.df)
     
   def add_entry(self,t,x,y,theta):
     #df_add = pd.DataFrame({'t':[t], 'row':[x],'col':[y],'theta_pix':[theta]})
     df_add = pd.DataFrame({'t':[t], 'x':[x],'y':[y],'theta':[theta]})
     self.df = self.df.append(df_add, ignore_index=True)
 
-  def sort_by_time(self):
-    self.df = self.df.sort_values(by='t')
-
-  def print(self):
-    print(self.df)
-
   def print_frame(self,index):
     print(self.df.loc[index])
+
+  def sort_by_time(self):
+    self.df = self.df.sort_values(by='t')
 
   def loc(self,index,val):
     return self.df.loc[index,val]
 
-  def cut_array(self,arr,vcut=False,ocut=False):
-    cut_arr = np.zeros_like(arr,dtype=bool)
-    if vcut:
-      if 'speed_cut' not in self.df.columns:
-        print("\n No speed cut column found in DataFrame. Skipping speed cut.\n")
-      else:
-        vcut_arr = self.df['speed_cut']
-        cut_arr = cut_arr | vcut_arr
-    if ocut:
-      if 'd_cut' not in self.df.columns:
-        print("\n No occlusion cut column found in DataFrame. Skipping occlusion cut.\n")
-      else:
-        ocut_arr = self.df['d_cut']
-        cut_arr = cut_arr | ocut_arr
-    return cut_arr
-    
+  def convert_pixels(self, row_c, col_c, L_pix, L_m):
+    A_convert = L_m / L_pix
+    self.pixel_reformat()
+    self.df['x'] =  A_convert*(self.df['row'] - row_c)
+    self.df['y'] =  A_convert*(self.df['col'] - col_c)
 
-  def calculate_stats(self, val_name, valmin = None, valmax = None,
-                                     framei = 0, framef = None,
-                                     vcut = False, ocut = False):
-
-    try: 
-      self.stats
-    except AttributeError:
-      self.stats = {}
-      
-    if val_name not in self.df.columns:
-      print("\n  %s not found in DataFrame. Skipping calculation of mean.\n" % val_name)
-    else:
-      arr = np.array(self.df[val_name])
-      cut_arr = self.cut_array(arr,vcut,ocut)
-      arr = arr[np.logical_not(cut_arr)]
-      if framef == None:
-        framef = len(arr)
-      arr = arr[framei:framef]
-      if valmin != None:
-        arr = arr[arr >= valmin]
-      if valmax != None:
-        arr = arr[arr <= valmax]
-
-      self.stats["mean_%s" % val_name] = np.mean(arr) 
-      self.stats["std_%s" % val_name]  = np.std(arr)
-      return self.stats["mean_%s" % val_name], self.stats["std_%s" % val_name]
-
-
-  def calculate_stats_symm(self, val_name, valmin = None, valmax = None,
-                                     framei = 0, framef = None,
-                                     vcut = False, ocut = False):
-    try: 
-      self.stats
-    except AttributeError:
-      self.stats = {}
-
-    if val_name not in self.df.columns:
-      print("\n  %s not found in DataFrame. Skipping calculation of symmetric stats.\n" % val_name)
-    else:
-      arr = np.array(self.df[val_name])
-      cut_arr = self.cut_array(arr,vcut,ocut)
-      arr = arr[np.logical_not(cut_arr)]
-      if framef == None:
-        framef = len(arr)
-      arr = arr[framei:framef]
-      if valmin != None:
-        arr = arr[arr >= valmin]
-      if valmax != None:
-        arr = arr[arr <= valmax]
-      arr = np.concatenate((arr,-arr))
-      self.stats["mean_%s" % val_name] = np.mean(arr) 
-      self.stats["std_%s" % val_name]  = np.std(arr)
-      self.stats["kurt_%s" % val_name] = spstats.kurtosis(arr,fisher=False)
-      return self.stats["mean_%s" % val_name], self.stats["std_%s" % val_name], self.stats["kurt_%s" % val_name]
+  def pixel_reformat(self):
+    if 'col' not in self.df.columns:
+      self.df['col'] = self.df['x']
+      self.df.drop(columns=['x'])
+    if 'row' not in self.df.columns:
+      self.df['row'] = self.df['y']
+      self.df.drop(columns=['y'])
+    if 'theta_pix' not in self.df.columns:
+      self.df['theta_pix'] = self.df['theta']
+      self.df.drop(columns=['theta'])
 
   def calculate_dwall(self,tank_radius):
-    self.df['dw'] = self.df.apply(lambda row: tank_radius - ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
+    self.df['dw'] = self.df.apply(lambda row: tank_radius - 
+                           ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
 
   def calculate_velocity(self,fps):
     if 'vx' not in self.df.columns or 'vy' not in self.df.columns:
@@ -112,10 +59,6 @@ class KinematicDataFrame:
       self.df['vy'] = ( self.df.y.shift(-1) - self.df.y.shift(1) ) / 2 * fps
     if 'speed' not in self.df.columns:
       self.df['speed'] = np.sqrt(pow(self.df.vx,2) + pow(self.df.vy,2)) 
-
-  def calculate_mean(self,val_name,vmin=None,vmax=None):
-    arr = np.array(self.df[val_name])
-    mean[val_name] = np.mean(arr[(arr > vmin) & (arr <= vmax)])
 
   def calculate_director(self,fps,theta_replace=False):
     if 'vx' not in self.df.columns or 'vy' not in self.df.columns:
@@ -158,23 +101,6 @@ class KinematicDataFrame:
     self.df['af'] =   np.cos(self.df.etheta)*self.df.ax + np.sin(self.df.etheta)*self.df.ay
     self.df['al'] = - np.sin(self.df.etheta)*self.df.ax + np.cos(self.df.etheta)*self.df.ay
 
-  def convert_pixels(self, row_c, col_c, L_pix, L_m):
-    A_convert = L_m / L_pix
-    self.pixel_reformat()
-    self.df['x'] =  A_convert*(self.df['row'] - row_c)
-    self.df['y'] =  A_convert*(self.df['col'] - col_c)
-
-  def pixel_reformat(self):
-    if 'col' not in self.df.columns:
-      self.df['col'] = self.df['x']
-      self.df.drop(columns=['x'])
-    if 'row' not in self.df.columns:
-      self.df['row'] = self.df['y']
-      self.df.drop(columns=['y'])
-    if 'theta_pix' not in self.df.columns:
-      self.df['theta_pix'] = self.df['theta']
-      self.df.drop(columns=['theta'])
-
   def tstamp_reformat(self,fps):
     mean_dt = (self.df.t.shift(-1) - self.df.t.shift(0)).mean()
     expected_dt = 1./fps
@@ -182,25 +108,28 @@ class KinematicDataFrame:
       factor = expected_dt / mean_dt 
       self.df.t *= factor
 
-  def speed_cut(self,speed_cut=1.,n_buffer_frames=2):
+
+  # speed_cut(...) is used to determine frames to be cut for being out of the 
+  # valid range of speeds
+  def speed_cut(self,speed_min=1.,speed_max=100,n_buffer_frames=2):
     if 'speed_cut' not in self.df.columns:
       if 'speed' not in self.df.columns:
         self.calculate_velocity()
         
-      self.df['speed_cut'] = self.df[['speed']].apply(lambda row: (row[0] < speed_cut or row[0] > 100.), axis=1)
+      self.df['speed_cut'] = self.df[['speed']].apply(lambda row: 
+          (row[0] < speed_min or row[0] > speed_max ), axis=1)
       for j_frame in range(1,n_buffer_frames+1):
         self.df['speed_cut'] = ( self.df['speed_cut'] \
                             | self.df.speed_cut.shift(-j_frame) \
                             | self.df.speed_cut.shift(j_frame) )
 
-
+  # distance_cut(...) is used to determine frames to be cut at too short a 
+  # range, default of zero. This is a way to remove occlusions in post-
+  # processing under the assumption that the tracking module outputs occlusions
+  # as two fish with the same center-point
   def distance_cut(self,distance_nn,d_min=0,n_buffer_frames=2):
-
     if 'd_cut' not in self.df.columns:
       distance_nn = np.array(distance_nn)
-      #print("entries in distance_nn",len(distance_nn))
-      #print("dim of distance_nn entry",len(distance_nn[0]))
-      #print("entries in DF", self.n_entries())
       d_cut_bool = np.logical_not(distance_nn > d_min)
       self.df['d_cut'] = d_cut_bool 
 
@@ -223,33 +152,59 @@ class KinematicDataFrame:
     n_cut = sum(self.df['speed_cut'][framei:framef] | self.df['d_cut'][framei:framef])
     return float(n_cut)/len(self.df['speed_cut'][framei:framef])
 
+  # cut_array(...) generates a mask based on cuts, providing boolean values
+  # that represent frames to be cut. User specifies cuts which must be 
+  # completed prior to running this function.
+  def cut_array(self,arr,vcut=False,ocut=False):
+    cut_arr = np.zeros_like(arr,dtype=bool)
+    if vcut:
+      if 'speed_cut' not in self.df.columns:
+        print("\n No speed cut column found in DataFrame. Skipping speed cut.\n")
+      else:
+        vcut_arr = self.df['speed_cut']
+        cut_arr = cut_arr | vcut_arr
+    if ocut:
+      if 'd_cut' not in self.df.columns:
+        print("\n No occlusion cut column found in DataFrame. Skipping occlusion cut.\n")
+      else:
+        ocut_arr = self.df['d_cut']
+        cut_arr = cut_arr | ocut_arr
+    return cut_arr 
 
-def main():
-  nvals = int(sys.argv[1])
-  diam = float(sys.argv[2])
-  q = KinematicDataFrame()
-  fps = 30
-  for i in range(nvals):
-    if i == 0:
-      x_tmp = y_tmp = theta_tmp = 0
+  # calculate_stats(...) takes the name of a value and calculates its 
+  # statistics across valid frames. User can specify a range of values and a 
+  # range of time, along with whether or not to use speed and occlusion cuts. 
+  # Also has option to make data symmetric about the origin, for use with 
+  # angular speed statistics.
+  def calculate_stats(self, val_name, valmin = None, valmax = None,
+                      framei = 0, framef = None, vcut = False, ocut = False, 
+                      symm = False):
+    try: 
+      self.stats
+    except AttributeError:
+      self.stats = {}
+      
+    if val_name not in self.df.columns:
+      print("\n  %s not found in DataFrame. Skipping calculation of mean.\n" % val_name)
     else:
-      x_tmp     = q.loc(i-1,'x') + np.random.normal(0,0.1)
-      y_tmp     = q.loc(i-1,'y') + np.random.normal(0,0.1)
-      theta_tmp = np.fmod(q.loc(i-1,'theta') + np.random.normal(0,0.1) + np.pi ,2*np.pi) - np.pi
-      q.add_entry(i*dt,x_tmp,y_tmp,theta_tmp)
-  
-  dt = 1/fps
-  
-  q.calculate_dwall(diam)
-  q.print_frame(nvals-3)
-  
-  q.calculate_velocity(fps)
-  q.calculate_acceleration(fps)
-  q.print_frame(nvals-3)
-  
-  q.calculate_director(fps)
-  q.print_frame(nvals-3)
-  q.calculate_local_acceleration(fps)
-  q.print_frame(nvals-3)
+      arr = np.array(self.df[val_name])
+      cut_arr = self.cut_array(arr,vcut,ocut)
+      arr = arr[np.logical_not(cut_arr)]
+      if framef == None:
+        framef = len(arr)
+        
+      arr = arr[framei:framef]
+      if valmin != None:
+        arr = arr[arr >= valmin]
+      if valmax != None:
+        arr = arr[arr <= valmax]
 
-#main()
+      if symm: arr = np.concatenate((arr,-arr))
+      
+      self.stats["mean_%s" % val_name] = np.mean(arr) 
+      self.stats["std_%s" % val_name]  = np.std(arr)
+      self.stats["kurt_%s" % val_name] = spstats.kurtosis(arr,fisher=False)
+          
+      return self.stats["mean_%s" % val_name], \
+             self.stats["std_%s" % val_name],  \
+             self.stats["kurt_%s" % val_name]
