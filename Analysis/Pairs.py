@@ -2,7 +2,7 @@
 import sys
 import numpy as np
 sys.path.insert(0, '/data1/cavefish/social/python/track')
-from Archive import Archive
+from Analysis.Archive import Archive
 
 
 def neighbor_distance(arc,n,t,dij_min=0):
@@ -92,3 +92,4 @@ def analyze_neighbors(arc,n,t,d_min=0,n_buffer_frames=2):
     val = 'frac_valid_both'
     frac_valid_both = np.array(frac_valid_both)
     arc.result[arc.result_key(n,t,val)] = frac_valid_both
+    

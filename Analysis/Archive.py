@@ -1,16 +1,9 @@
 #!/usr/bin/python
-import sys, os
+import sys
 import numpy as np
-import copy
-import scipy.stats as spstats 
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.cm as mpl_cm
-from mpl_toolkits.axes_grid1 import ImageGrid
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-sys.path.insert(0, '/data1/cavefish/social/python/track')
-from Trial import Trial
-import Math as am
+sys.path.insert(0, '/data1/cavefish/social/python/cv-tracer')
+from TrAQ.Trial import Trial
+import Analysis.Math as ana_math
 
 
 class Archive:
@@ -19,47 +12,35 @@ class Archive:
         self.trials = {}
         self.result = {}
 
+    # Functions for storing and recalling trials
     def trial_key(self, t, n):
         return "%s_%02i" % (t, n)
     
-    def result_key(self, t, n, val, tag=None):
-        return "%s_%02i_%s_%s" % (t, n, val, tag)
-    
-    def save_result(self, t, n, val_name, stat_name, result):
-        self.result[self.result_key(t, n,"%s_%s" % (val_name,stat_name))] = result
-
-    def load_result(self, t, n, val_name, stat_name, result):
-        return self.result[self.result_key(t, n, "%s_%s" % (val_name,stat_name))]
-
-    def print_results(self):
-        for key in self.result:
-            print(key,self.result[key])
-    
-    def load_list(self, trials, ns, ts, fps = 30, t0 = 10, tf = 30):
+    def trial_list(self, t, n):
+        return self.trials[self.trial_key(t,n)]
+        
+    def load_trials(self, trials, ns, ts, fps = 30, t0 = 10, tf = 30):
+        self.ns     = np.array(ns)
+        self.ts     = np.array(ts)
         self.framei = t0 * 60. * fps 
         self.framef = tf * 60. * fps 
-        self.ns = ns
-        self.ts = ts
 
-        for t in ts:        
+        for t in ts:
             for n in ns:
                 self.trials[self.trial_key(t,n)] = []
 
-        ns = np.array(ns)
-        ts = np.array(ts)
         f = open(trials,'r')
         for line in f:
             fpath  = line.rstrip("\n")
-            fname = fpath.split('/')[-1]
-            t = fname.split('_')[0]
-            n = int(fname.split('_n')[-1].split('_')[0])
-            if np.isin(n,ns) and np.isin(t,ts):
-                self.trials[self.trial_key(t,n)].append(Trial(fpath))
+            _trial = Trial(fpath)
+            if np.isin(_trial.n,ns) and np.isin(_trial.t,ts):
+                self.trial_list(t,n).append(_trial)
 
-    def print_select(self, t, n):
-        for trial in range(len(self.trials[self.trial_key(t, n)])):            
+
+    def print_trial_list(self, t, n):
+        for trial in self.trials[self.trial_key(t, n)]:            
             print("\n  %s, %2i %s" % ( trial.date, t, n ) )
-            print("     video: %s" % ( trial.file ) )
+            print("     video: %s" % ( trial.video ) )
             print("      data: %s" % ( trial.data ) )
             if trial.issue:
                 print("       Known issues: " )
@@ -68,39 +49,53 @@ class Archive:
     def print_sorted(self):
         for t in self.ts:
             for n in self.ns:
-                self.print_select(t, n)
+                self.print_trial_list(t, n)
+
+
+
+    # Functions for storing and recalling results    
+    def result_key(self, t, n, val_name, stat_name, tag = None):
+        return "%s_%02i_%s_%s_%s" % (t, n, val_name, stat_name, tag)
+    
+    def save_result(self, t, n, val_name, stat_name, tag = None):
+        self.result[self.result_key(t, n, val_name, stat_name, tag)] = result
+
+    def get_result(self, t, n, val_name, stat_name, tag = None):
+        return self.result[self.result_key(t, n, val_name, stat_name, tag)]
+
+    def print_result(self,key):
+        print(key,self.result[key])
+
+    def print_results(self):
+        for key in self.result:
+            self.print_result(key)
 
  
     # If speed and occlusion cuts are to be made, be sure to run them first!
-    def combine_trial_stats(self, t, n, 
-                            val_name, valmin=None, valmax=None, 
-                            vcut=False, ocut=False, symm=False):
-        mean_arr = []
-        stdd_arr = []
-        kurt_arr = []
-        for i_file in range(len(self.d['file'])):
-            if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
+    def combine_trial_stats(self, t, n, val_name, 
+                            valmin=None, valmax=None, nbins = 100, 
+                            vcut=False, ocut=False, symm = False):
 
-                mean_tmp, mean_err, stdd_tmp, stdd_err, kurt_tmp, kurt_err = \
-                        self.d['group'][i_file].calculate_stats(val_name, valmin, valmax, 
-                              self.framei, self.framef, vcut, ocut, symm)
-                print("  %4.2e %4.2e %4.2e %4.2e %4.2e %4.2e" % 
-                            (mean_tmp, mean_err, stdd_tmp, stdd_err, kurt_tmp, kurt_err))
-                mean_arr.append(mean_tmp)
-                stdd_arr.append(stdd_tmp)
-                kurt_arr.append(kurt_tmp)
+        stat_keys = [ "mean", "stdd", "kurt", "hist" ]
+        stat_list = {}
+        for key in stat_keys:
+            stat_list[key] = []
 
-        mean_mean, mean_err = am.mean_and_err(mean_arr, val_name, 'mean', t, n)
-        self.save_result(val_name, 'mean', t, n, [mean_mean, mean_err])
-    
-        stdd_mean, stdd_err = am.mean_and_err(mean_arr, val_name, 'stdd', t, n)
-        self.save_result(val_name, 'stdd', t, n, [stdd_mean, stdd_err])
-    
-        kurt_mean, kurt_err = am.mean_and_err(mean_arr, val_name, 'kurt', t, n)
-        self.save_result(val_name, 'kurt', t, n, [kurt_mean, kurt_err])
+        for trial in self.trials[self.trial_key(t, n)]:                      
+            trial.group.calculate_stats( val_name, valmin, valmax, 
+                                         self.framei, self.framef, 
+                                         vcut, ocut, symm)
+            
+            for key in stat_keys:
+                stat_list[key].append(self.group.get_result(val_name,key))
+
+        for key in stat_keys:
+            if key == 'hist':
+                stat_result = ana_math.mean_and_err_hist(stat_list[key], nbins)
+            else:
+                stat_result = ana_math.mean_and_err(stat_list[key])
+            self.get_result(t, n, val_name, key, tag = None) = stat_result
  
-        return mean_mean, mean_err, stdd_mean, stdd_err, kurt_mean, kurt_err
-
 
     def trial_speed_cut(self,i_file,speed_cut=1.,n_buffer_frames=2):
         self.d['group'][i_file].speed_cut(speed_cut,n_buffer_frames)
