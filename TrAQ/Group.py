@@ -295,19 +295,18 @@ class Group:
     # values and a range of time, along with whether or not to use speed and 
     # occlusion cuts. Also has option to make data symmetric about the origin, 
     # for use with angular speed statistics.
-    def calculate_stats(self, val_name, valmin = None, valmax = None,
-                        framei = 0, framef = None, vcut = False, ocut = False,
-                        nbins = 100, hrange = None, symm = False):
+    def calculate_stats(self, val_name, valmin = None, valmax = None, 
+                        nbins = 100, framei = 0, framef = None, 
+                        vcut = False, ocut = False, symm = False):
         
         stat_keys = [ "mean", "stdd", "kurt", "hist" ]
         stat_list = {}
         for key in stat_keys:
             stat_list[key] = []
-            
+
         for i_fish in range(self.n_fish):
-            self.fish[i_fish].calculate_stats( val_name, valmin, valmax, 
-                                               framei, framef, vcut, ocut, 
-                                               nbins, hrange, symm )
+            self.fish[i_fish].calculate_stats( val_name, valmin, valmax, nbins,
+                                               framei, framef, vcut, ocut, symm )
             for key in stat_keys:
                 stat_list[key].append(self.fish[i_fish].get_result(val_name,key))
     

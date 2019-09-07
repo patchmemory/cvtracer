@@ -12,7 +12,7 @@ class Individual:
         self.df = pd.DataFrame( data=d, dtype=np.float64 )
         self.result = {}
 
-    def n_entries(self):
+    def n_frames(self):
         return len(self.df.index)
 
     def print(self):
@@ -202,12 +202,27 @@ class Individual:
                 
             if symm: arr = np.concatenate((arr,-arr))
       
-        self.result["mean_%s" % val_name] = np.mean(arr) 
-        self.result["stdd_%s" % val_name] = np.std(arr)
-        self.result["kurt_%s" % val_name] = spstats.kurtosis(arr,fisher=False)
-        self.result["hist_%s" % val_name] = np.histogram(arr, bins=nbins, range=hrange, density=True)
-      
+        self.get_result(val_name, 'mean') = np.mean(arr) 
+        self.get_result(val_name, 'stdd') = np.std(arr)
+        self.get_result(val_name, 'kurt') = spstats.kurtosis(arr,fisher=False)
+        self.get_result(val_name, 'hist') = np.histogram(arr, bins=nbins, 
+                                                   range=hrange, density=True)
         
-    def get_result(self,val_name,stat_name):
-        return self.result["%s_%s" % (stat_name,val_name)]
+#        self.result[self.result_key(val_name, 'mean')] = np.mean(arr) 
+#        self.result[self.result_key(val_name, 'stdd')] = np.std(arr)
+#        self.result[self.result_key(val_name, 'kurt')] = spstats.kurtosis(arr,fisher=False)
+#        self.result[self.result_key(val_name, 'hist')] = np.histogram(arr, bins=nbins, range=hrange, density=True)
+
+
+      
+    # Functions for storing and recalling results    
+    def result_key(self, val_name, stat_name, tag = None):
+        return "%s_%s_%s" % (val_name, stat_name, tag)
+        
+    def get_result(self, val_name, stat_name, tag = None):
+        k = self.result_key(val_name, stat_name)
+        return self.result[k]
+    
+    def store_result(self, result, val_name, stat_name, tag = None):
+        k = self.result_key(val_name, 'mean')
   

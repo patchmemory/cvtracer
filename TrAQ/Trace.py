@@ -63,18 +63,6 @@ def arg_parse():
   parser.add_argument("-gpu","--gpu_on", help="use UMat file handling for OpenCV Transparent API", action='store_true') 
   return parser.parse_args()
 
-def arg_parse_detect_tank():
-  parser = argparse.ArgumentParser(description="OpenCV2 Tank Detector")
-  parser.add_argument("raw_video", type=str, help="path to raw video")
-  #parser.add_argument("-c","--convert", help="convert pixels", action='store_true') 
-  parser.add_argument("-ck","--calculate_kinematics", help="calculate kinematics after conversion", action='store_true') 
-  parser.add_argument("-td","--tank_diameter", type=float, help="tank diameter", default=111.)
-  parser.add_argument("-ts","--t_start", type=float, help="start time, in seconds", default=0)
-  parser.add_argument("-te","--t_end", type=float, help="end time, in seconds", default=-1)
-  parser.add_argument("-fps","--frames_per_second", type=float, help="frames per second in raw video",default=30)
-  parser.add_argument("-wd","--work_dir", type=str, help="root working directory if not current",default=os.getcwd())
-  parser.add_argument("-vs","--view_scale", type=float, help="factor to scale viewer to fit window", default=1)
-  return parser.parse_args()
 
 def path_slash(path):
   if path[-1] != '/': 
@@ -246,13 +234,11 @@ def tank_mask(frame, x_cm, y_cm, R):
   return tank_only
 
 
-def tank_draw_gray(frame, x_cm, y_cm, R):
-  cv2.circle(frame,(int(x_cm),int(y_cm)),int(R),0,thickness=7)
-  return frame
-
-
-def tank_draw_RGB(frame, x_cm, y_cm, R):
-  cv2.circle(frame,(int(x_cm),int(y_cm)),int(R),(0,0,0),thickness=7)
+def tank_draw(frame, x_cm, y_cm, R, RGB = False):
+    if RGB:
+        cv2.circle(frame,(int(x_cm),int(y_cm)),int(R),(0,0,0),thickness=7)
+    else:
+        cv2.circle(frame,(int(x_cm),int(y_cm)),int(R),0,thickness=7)
   return frame
 
 

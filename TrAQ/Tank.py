@@ -8,16 +8,12 @@
 #  larval astyanax mexicanus ---adam patch, fau jupiter, jan 2019
 #
 ##################################################################################
-import sys, os
+import sys
+import os
+import argparse
 import numpy as np
 import cv2
-import pandas as pd
-import scipy.signal
-from scipy.optimize import linear_sum_assignment
-from scipy.spatial.distance import cdist
-import matplotlib.pyplot as plt
-import Tracker as tr
-from KinematicDataFrame import KinematicDataFrame
+import TrAQ.Trace as Trace
 
 class Tank:
 
@@ -83,7 +79,7 @@ def select_circle(event,x,y,flags,param):
 
 def locate_tank():
     
-    args = tr.arg_parse_detect_tank()
+    args = Trace.arg_parse()
     
     fps = args.frames_per_second
     tank_radius_cm = args.tank_diameter/2.
@@ -95,7 +91,7 @@ def locate_tank():
     data_output_dir = "data/"
     video_output_dir = "video/"
     output_str = "cv"
-    input_vidpath, output_vidpath, output_filepath, output_text, codec = tr.organize_filenames(
+    input_vidpath, output_vidpath, output_filepath, output_text, codec = Trace.organize_filenames(
                                     home_path,input_loc,video_output_dir,data_output_dir,output_str)
     tank_info_file = "%s_tank.dat" % (output_filepath.split('.')[0])
     
@@ -186,3 +182,18 @@ def locate_tank():
         sys.stdout.write("\n")
         sys.stdout.write("       %s kinematic quantities have been calculated.\n" % output_filepath)
         sys.stdout.flush()
+
+
+
+def arg_parse():
+  parser = argparse.ArgumentParser(description="OpenCV2 Tank Detector")
+  parser.add_argument("raw_video", type=str, help="path to raw video")
+  #parser.add_argument("-c","--convert", help="convert pixels", action='store_true') 
+  parser.add_argument("-ck","--calculate_kinematics", help="calculate kinematics after conversion", action='store_true') 
+  parser.add_argument("-td","--tank_diameter", type=float, help="tank diameter", default=111.)
+  parser.add_argument("-ts","--t_start", type=float, help="start time, in seconds", default=0)
+  parser.add_argument("-te","--t_end", type=float, help="end time, in seconds", default=-1)
+  parser.add_argument("-fps","--frames_per_second", type=float, help="frames per second in raw video",default=30)
+  parser.add_argument("-wd","--work_dir", type=str, help="root working directory if not current",default=os.getcwd())
+  parser.add_argument("-vs","--view_scale", type=float, help="factor to scale viewer to fit window", default=1)
+  return parser.parse_args()

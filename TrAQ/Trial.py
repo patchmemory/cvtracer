@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from TrAQ.Group import Group
 from TrAQ.Tank import Tank
+import TrAQ.Tank.arg_parse as tank_arg_parse
 
 
 class Trial:
