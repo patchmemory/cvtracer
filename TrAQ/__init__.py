@@ -1,1 +1,1 @@
-__all__ = [ "Group.py", "Individual.py", "Tank.py", "Trace.py", "Trial.py" ]
+__all__ = [ "Trial.py", "Tank.py", "Group.py", "Individual.py", "Tracer.py", "VideoCV.py" ]

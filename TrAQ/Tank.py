@@ -1,13 +1,3 @@
-##################################################################################
-#
-#  this is a hacked version of tracktor, first composed by Vivekh Sridhar of
-#  the Couzin lab, the base be found here: github.com/vivekhsridhar/tracktor 
-#  
-#  using Sridhar's tracktor as a starting point, i have tuned parameters and
-#  modifed several features adhoc to study collective behavior of adult and
-#  larval astyanax mexicanus ---adam patch, fau jupiter, jan 2019
-#
-##################################################################################
 import sys
 import os
 import argparse
@@ -186,14 +176,55 @@ def locate_tank():
 
 
 def arg_parse():
-  parser = argparse.ArgumentParser(description="OpenCV2 Tank Detector")
-  parser.add_argument("raw_video", type=str, help="path to raw video")
-  #parser.add_argument("-c","--convert", help="convert pixels", action='store_true') 
-  parser.add_argument("-ck","--calculate_kinematics", help="calculate kinematics after conversion", action='store_true') 
-  parser.add_argument("-td","--tank_diameter", type=float, help="tank diameter", default=111.)
-  parser.add_argument("-ts","--t_start", type=float, help="start time, in seconds", default=0)
-  parser.add_argument("-te","--t_end", type=float, help="end time, in seconds", default=-1)
-  parser.add_argument("-fps","--frames_per_second", type=float, help="frames per second in raw video",default=30)
-  parser.add_argument("-wd","--work_dir", type=str, help="root working directory if not current",default=os.getcwd())
-  parser.add_argument("-vs","--view_scale", type=float, help="factor to scale viewer to fit window", default=1)
-  return parser.parse_args()
+    parser = argparse.ArgumentParser(description="OpenCV2 Tank Detector")
+    parser.add_argument("raw_video", type=str, help="path to raw video")
+    #parser.add_argument("-c","--convert", help="convert pixels", action='store_true') 
+    parser.add_argument("-ck","--calculate_kinematics", help="calculate kinematics after conversion", action='store_true') 
+    parser.add_argument("-td","--tank_diameter", type=float, help="tank diameter", default=111.)
+    parser.add_argument("-ts","--t_start", type=float, help="start time, in seconds", default=0)
+    parser.add_argument("-te","--t_end", type=float, help="end time, in seconds", default=-1)
+    parser.add_argument("-fps","--frames_per_second", type=float, help="frames per second in raw video",default=30)
+    parser.add_argument("-wd","--work_dir", type=str, help="root working directory if not current",default=os.getcwd())
+    parser.add_argument("-vs","--view_scale", type=float, help="factor to scale viewer to fit window", default=1)
+    return parser.parse_args()
+
+# locates edges of a circular tank using radius guess and contours
+def tank_detect(frame, tank_R_guess = 465, min_area = 1000, max_area = 1e7):
+    # return a list 'tank_measure' with entries (radius, x_cm, y_cm) in pixels
+    tank_measure = [] 
+    # first apply threshold (input parameters tuned adhoc)
+    n_pix = 3
+    block_size = 151
+    offset = 1
+    thresh = threshold_detect(frame, n_pix, block_size, offset) 
+    # next find contours
+    img, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    # then choose the contour/s that best fit with tank_R_guess
+    i = 0
+    while i < len(contours):
+        area = cv2.contourArea(contours[i])
+        if area < min_area or area > max_area:
+            del contours[i]
+        else:
+            (tank_xcm, tank_ycm), tank_R = cv2.minEnclosingCircle(contours[i])   
+            if abs(tank_R - tank_R_guess) < 0.1 * tank_R_guess:
+                tank_measure.append(np.array([tank_R,tank_xcm,tank_ycm]))
+            i += 1
+  # return the list, ideally of length 1
+  return tank_measure
+
+
+def tank_detect_avg(tank_info, n_samples):
+  tank_info      = np.array(tank_info)
+  tank_R_avg     = np.mean(tank_info[:,0])
+  tank_R_err     = np.std(tank_info[:,0])/np.sqrt(len(tank_info)-1)
+  tank_x_com_avg = np.mean(tank_info[:,1])
+  tank_x_com_err = np.std(tank_info[:,1])/np.sqrt(len(tank_info)-1)
+  tank_y_com_avg = np.mean(tank_info[:,2])
+  tank_y_com_err = np.std(tank_info[:,2])/np.sqrt(len(tank_info)-1)
+  print("       Tank center and radius estimated from %i random samples.\n" % (n_samples) )
+  print("         R = %0.2e +/- %0.2e pixels" % (tank_R_avg, tank_R_err) )
+  print("         x = %0.2e +/- %0.2e pixels" % (tank_x_com_avg, tank_x_com_err) )
+  print("         y = %0.2e +/- %0.2e pixels" % (tank_y_com_avg, tank_y_com_err) )
+  print("\n")
+  return tank_x_com_avg, tank_y_com_avg, tank_R_avg

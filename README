@@ -1,0 +1,168 @@
+###############################################################################
+#                                                                             #
+#  This is the cv-tracer software package, designed for tracking and          # 
+#  analyzing dynamics of fish swimming in groups. It can be downloaded at     #
+#                                                                             #
+#    https://github.com/patchmemory/cv-tracer                                 #
+#                                                                             #
+#  Software designed and developed by Adam Patch and Yaouen Fily at Florida   #
+#  Atlantic University. Began with github.com/vivekhsridhar/tracktor.         #
+#                                                                             #
+###############################################################################
+
+  In the cv-tracer package, one will fild the modules TrAQ, Analysis, and GUI
+  These three modules provide necessary tools for different stages of tracking
+  birds-eye video of fish swimming in a tank, reviewing the results alongside
+  video to check for errors, and analyzing the results across trials. 
+
+  Scripts for executing all of these tasks can be found in 
+  
+    */scripts/ 
+  
+  subdirectory of each base module (e.g. TrAQ/scripts, Analysis/scripts). 
+
+  This document provides a basic overview of how to use this software and is
+  broken into three sections:
+
+    1. Tracing and processing tracks 
+    2. Analyzing results across trials 
+    3. Reviewing kinematics alongside video 
+
+  This software can be easily modified to 
+  
+
+  #############################
+  Tracing and processing tracks 
+  #############################
+
+    One can completely track and process a video trial, by executing the
+    following commands and providing relevant input parameters. 
+    
+      >  python TrAQ/scripts/prepare.py [input_video] -opts
+      >  python TrAQ/scripts/trace.py [input_video] -opts
+      >  python TrAQ/scripts/process.py [input_video] -opts
+    
+    These each perform the following tasks:
+    
+      prepare.py: Loads video for the first time and takes down information
+                  about the run like the raw video file, the number of
+                  individuals, the type of fish, the total length of the run,
+                  and any other relevant input for characterizing the trial.
+                  The script then generates a Trial object to store all of this
+                  information. 
+    
+                  Once the trial object has been created, the script will
+                  prompt the user to utilize a GUI to locate the tank edges and
+                  store the result as a Tank object inside the trial object. 
+    
+                  A Group object (which contains Individual objects) within the
+                  Trial object will also be generated to store and analyze data
+                  at the time of tracing and processing. 
+    
+                  Finally, the script will generate a directory with a concise
+                  name reflecting that of the original video file, moving that
+                  file to this new directory as raw.mp4. The Trial object will
+                  also be stored in this directory with the name trial.pik 
+    
+        trace.py: Loads Trial object and utilizes Tracer and VideoCV objects to
+                  track coordinates of fish throughout that trial. 
+    
+                  At each frame, Tracer will gather and sort the findings of
+                  VideoCV in order to best trace the location of fish
+                  throughout the run, ignoring fish misidentified outside of
+                  the Tank, as identified in prepare.py. The resulting
+                  coordinates are stored as Individuals in the Trial's Group. 
+    
+                  Trial object, now containing Tank, Group, and all relevant
+                  trial-specific information, is again saved in the
+                  trial-specific location, as found at the beginning of
+                  tracing.
+    
+    
+      process.py: After the initial tracking has occurred, it is useful to now
+                  better calculate kinematic quantities like velocity and
+                  acceleration in both translational and rotational coordinates
+                  (latter w.r.t. director angle). 
+    
+                  Using these quantities, it is then useful to provide some
+                  initial statistical analysis without any cuts, for the sake
+                  of quickly summarizing the behavior of fish in each run.  
+    
+                  With further development, this stage would also be the place
+                  to fix errors in the initial tracks which may have issues
+                  with occlusions and jumping points. At this point in time, it
+                  only really makes sense to perhaps identify frames and points
+                  of interest for the sake of troubleshooting in the future.
+                  For our first paper, these issues are handled by simple
+                  ad-hoc cuts which will be made to obviously erraneous data
+                  during the next stage, Analysis, so that all Trials will be
+                  treated uniformly.
+ 
+
+  ###############################
+  Analyzing results across trials 
+  ###############################
+
+    Once the tracking of a set of trials is complete, one can run the following
+    command and relevant input parameters in order to analyze data given a set
+    of cuts. 
+ 
+      >  python Analysis/scripts/analysis.py [list_of_trials] -opts
+ 
+    While the analysis itself may be modified, this will perform a few basic
+    tasks regardless of the specific analysis.
+ 
+     analysis.py: First, all Trial objects will be loaded from their save
+                  locations and stored in an Archive object. This object has
+                  the ability to call functions on each trial (e.g. make a
+                  consistent set of cuts) and to combine statistical results
+                  across trials, storing results according to analysis-specific
+                  cuts applied.
+ 
+                  Once results have been computed and collected, they can be
+                  combined and stored in the Archive object's result
+                  dictionary. This allows easy access via the Archive object
+                  later. 
+ 
+                  Utilizing the Analysis.Plot module, one can efficiently plot
+                  distributions and results for each trial and across trials.
+ 
+                  Trial-specific results will be stored in the Trial's home
+                  directory while the results across trials will be stored in
+                  results/.
+
+
+  ####################################
+  Reviewing kinematics alongside video 
+  ####################################
+
+    While one can, in principle, follow all of the above steps, it is always
+    useful to verify kinematic quantities being calculated correctly via some
+    kind of visual sanity check. The easiest way to do this is to utilize the
+    cvDataViewer, found in the GUI module. One can execute this GUI by simply  
+ 
+      >  python GUI/cvDataViewer.py [trial_directory] -v cv.mp4
+ 
+    This will open a window containing a video of the tracked fish as well as a
+    side panel displaying time-dependent results of three quantities: distance
+    to the wall, speed, and angular speed. 
+ 
+    This tool facilitates checks on tracking throughout a run by allowing users
+    to see directly if quantities are being properly calculated across frames
+    of the video. 
+ 
+    A couple examples of how one might use this information...
+ 
+      One may find that the tracer is having trouble locating fish at every
+      frame, resulting in jumps from track-to-track. By viewing this in the
+      cvDataViewer, one may step back to the tracking stage and try using a
+      different set of contour-tracing parameters to better identify fish and
+      then go back to verify after a second round of tracking has completed.
+  
+      Another may find that while the tracing has been done optimally, there
+      are still undesirable errors where fish appear to be jumping across the
+      tank or turning in an unphysical way. Despite the shortcomings of the
+      tracking software, this provides a basis for eliminating erroneous frames
+      by making cuts at the stage of Analysis, in order to consistently treat
+      systematic errors across runs. 
+
