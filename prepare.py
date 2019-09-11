@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 import argparse
-from TrAQ.Tank import Tank
+from TrAQ.Trial import Trial
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="cv-tracer Trial")
@@ -19,5 +19,5 @@ def arg_parse():
 args = arg_parse()
 
 trial = Trial(args.raw_video, args.n_individual, args.fish_type, 
-                 args.fps, argstank_diameter/2., args.ts, args.te):
+              args.frames_per_second, args.tank_diameter/2., args.t_start, args.t_end)
 

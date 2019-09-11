@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Fish.Individual import Individual
+from TrAQ.Individual import Individual
 from Analysis import Math as ana_math
 
 
 class Group: 
 
-    def __init__(self, t, n):
+    def __init__(self, n, t):
 
         self.t = t
         self.n = n
 
-        self.fish = np.empty(n)
+        self.fish = list(np.empty(n))
         for i in range(n):
             self.fish[i] = Individual()
 

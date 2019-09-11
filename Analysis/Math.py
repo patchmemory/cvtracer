@@ -3,15 +3,15 @@ import numpy as np
 
 class Coordinate:
     
-    def __init__(x,y,theta)
+    def __init__(self,x,y,theta):
         self.x = x
         self.y = y
         self.theta = theta
    
-    def distance(x,y):
+    def distance(self,x,y):
         return np.sqrt(np.pow(self.x - x,2) + np.pow(self.y - y,2))
     
-    def angle_diff(theta):
+    def angle_diff(self,theta):
         return min(self.theta - theta,
                    theta - self.theta,
                    self.theta - theta + 2*np.pi,

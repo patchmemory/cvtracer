@@ -201,11 +201,15 @@ class Individual:
                 
             if symm: arr = np.concatenate((arr,-arr))
       
-        self.get_result(val_name, 'mean') = np.mean(arr) 
-        self.get_result(val_name, 'stdd') = np.std(arr)
-        self.get_result(val_name, 'kurt') = spstats.kurtosis(arr,fisher=False)
-        self.get_result(val_name, 'hist') = np.histogram(arr, bins=nbins, 
-                                                   range=hrange, density=True)
+        mean = np.mean(arr)
+        stdd = np.std(arr)
+        kurt = spstats.kurtosis(arr,fisher=False)
+        hist = np.histogram(arr, bins=nbins, range=hrange, density=True)
+        
+        self.store_result(mean, val_name, 'mean')
+        self.store_result(stdd, val_name, 'stdd') 
+        self.store_result(kurt, val_name, 'kurt')
+        self.store_result(hist, val_name, 'hist')
         
 #        self.result[self.result_key(val_name, 'mean')] = np.mean(arr) 
 #        self.result[self.result_key(val_name, 'stdd')] = np.std(arr)
