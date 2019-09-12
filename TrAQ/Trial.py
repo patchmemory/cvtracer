@@ -8,7 +8,7 @@ from TrAQ.Tank import Tank
 
 class Trial:
     
-    def __init__(self, fvideo, n = None, t = None, date = ["YYYY","MM","DD"], 
+    def __init__(self, fvideo, n = None, t = None, date = None, 
                  fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
 
         self.result = {}
@@ -24,7 +24,7 @@ class Trial:
         else:
             print("  Directory organized properly.")
             
-        self.parse_fname()
+        self.parse_fname(date)
         if not self.load():
             sys.stdout.write("\n        Generating new Trial object.\n")
             self.n           = int(n)
@@ -38,20 +38,27 @@ class Trial:
             self.group       = Group(self.n, self.t)        
             self.date        = date
 
-            self.save()
+        self.save()
 
 
-    def parse_fname(self):
+    def parse_fname(self, date = None):
         fname_tmp = self.fvideo_raw.split('/')[:-1]
         fname_tmp.append(self.fname_std)
         self.fname = '/'.join(fname_tmp)
         
         # store the date of video
-        fdir   = self.fvideo_raw.split('/')[-2]
-        year  = int(fdir[ :4])
-        month = int(fdir[4:6])
-        day   = int(fdir[6:8])
+        if date != None:
+            year  = int(date[0:4])
+            month = int(date[4:6])
+            day   = int(date[6:8])
+        else:
+            fdir  = self.fvideo_raw.split('/')[-2]
+            year  = int(fdir[ :4])
+            month = int(fdir[4:6])
+            day   = int(fdir[6:8])
+        
         self.date = [ year, month, day ]
+        self.fdir = '/'.join(self.fvideo_raw.split('/')[:-1])
     
     def print_info(self):
         date_str = "%4i %2i %2i" % (self.date[0], self.date[1], self.date[2])
@@ -145,8 +152,6 @@ class Trial:
             results.append(self.group.fish[i_fish].get_result(val_name, stat_name, tag))
         return np.array(results)
     
-
-
 
 def organize_filenames(home_path, input_loc, video_output_dir, data_output_dir, output_str):
     home_path = os.path.abspath(home_path)

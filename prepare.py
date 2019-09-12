@@ -13,11 +13,13 @@ def arg_parse():
     parser.add_argument("-fps","--frames_per_second", type=float, help="frames per second in raw video", default=30)
     parser.add_argument("-td","--tank_diameter", type=float, help="tank diameter", default=111.)
     parser.add_argument("-ds","--datafile", type=str, help="data file-path, if not standard location") 
+    parser.add_argument("-YYYYMMDD","--date", type=str, help="dat in (numeric YYYYMMDD format) of video collection", default=None)
     return parser.parse_args()
 
 # read arguments
 args = arg_parse()
 
-trial = Trial(args.raw_video, args.n_individual, args.fish_type, 
-              args.frames_per_second, args.tank_diameter/2., args.t_start, args.t_end)
+trial = Trial(args.raw_video, n = args.n_individual, t = args.fish_type, date = args.date,
+              fps = args.frames_per_second, tank_radius = args.tank_diameter/2., 
+              t_start = args.t_start, t_end = args.t_end)
 

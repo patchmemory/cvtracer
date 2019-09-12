@@ -30,6 +30,11 @@ class Individual:
 
     def loc(self,index,val):
         return self.df.loc[index,val]
+    
+    def coordinates(self, index):
+        return [ self.loc(index,'x'), 
+                 self.loc(index,'y'), 
+                 self.loc(index,'theta') ]
 
     def convert_pixels(self, row_c, col_c, L_pix, L_m):
         A_convert = L_m / L_pix
