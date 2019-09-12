@@ -38,9 +38,9 @@
     One can completely track and process a video trial, by executing the
     following commands and providing relevant input parameters. 
     
-      >  python TrAQ/scripts/prepare.py [input_video] -opts
-      >  python TrAQ/scripts/trace.py [input_video] -opts
-      >  python TrAQ/scripts/process.py [input_video] -opts
+      >  python prepare.py [input_video] -opts
+      >  python trace.py [trial] -opts
+      >  python process.py [trial] -opts
     
     These each perform the following tasks:
     
@@ -107,7 +107,7 @@
     command and relevant input parameters in order to analyze data given a set
     of cuts. 
  
-      >  python Analysis/scripts/analysis.py [list_of_trials] -opts
+      >  python analyze.py [trial_list] -opts
  
     While the analysis itself may be modified, this will perform a few basic
     tasks regardless of the specific analysis.
