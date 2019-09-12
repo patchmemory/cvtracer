@@ -1,47 +1,84 @@
 import sys
+import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from TrAQ.Trial import Trial
 
 class VideoCV:
 
-    def __init__(self, video_source, view_scale = 1, RGB = False):        
-        self.fvideo_in      = video_source
+    def __init__(self, trial = Trial(), frame_start = 0, frame_end = -1, 
+                 block_size = 15, threshold_offset = 13, 
+                 min_area = 20, max_area = 1000, n_pixel_blur = 3,
+                 RGB = False, online = False, view_scale = 1, GPU = False ):
+        
+        self.fvideo_in      = trial.fvideo_raw
         self.fvideo_ext     = "mp4"
-        self.fvideo_out     = "cv.mp4"
+        self.fvideo_out     = os.path.abspath(trial.fdir + "/traced.mp4")
+        trial.fvideo_out = self.fvideo_out
         
         # initialize video playback details
-        self.fps            = 30
-        self.width          = 400
-        self.height         = 400
         self.view_scale     = view_scale
         self.RGB            = RGB
         self.codec          = 'mp4v'
         if ( self.fvideo_ext == ".avi" ): self.codec = 'DIVX' 
-        self.online_viewer  = False
-        self.GPU            = False
+        self.online_viewer  = online
+        self.GPU            = GPU
 
         # initialize openCV video capture
         self.cap            = None
         self.frame          = None
         self.frame_num      = -1
-        self.frame_start    = 0
-        self.frame_end      = -1
+        self.frame_start    = frame_start
+        self.frame_end      = frame_end
         self.init_video_capture()
         
         # initialize contour working variables
         self.contours       = []
         self.contour_list   = []
-        self.n_pix_avg      = 3
-        self.block_size     = 15
-        self.offset         = 13
-        self.min_area       = 20
-        self.max_area       = 1000
+        self.contour_repeat = []
+        self.n_pix_avg      = n_pix_blur
+        self.block_size     = block_size
+        self.offset         = threshold_offset
+        self.min_area       = min_area
+        self.max_area       = max_area
         self.thresh         = []
         
         # initialize lists for current and previous coordinates
         self.coord_now      = []
         self.coord_pre      = []
+        
+        # choose whether to randomize or preset color list,
+        #     (not necessary if running grayscale)
+        self.preset_color_list()
+        
+        
+        
+    def preset_color_list(self):
+        self.colors             = [ (   0,   0, 255),
+                                    (   0, 255, 255),
+                                    ( 255,   0, 255),
+                                    ( 255, 255, 255),
+                                    ( 255, 255,   0),
+                                    ( 255,   0,   0),
+                                    (   0, 255,   0),
+                                    (   0,   0,   0) ]
+
+    def random_color_list(self):
+        self.colors = []
+        low = 0
+        high = 255
+        print("    Randomizing colors for VideoCV object...")
+        for i in range(self.n_ind):
+            color = []
+            for i in range(3):
+                color.append(np.uint8(np.random.random_integers(low,high)))
+            self.colors.append((color[0],color[1],color[2]))
+        print("    Color list set as follows, ")
+        print(self.colors)
+
+
+
 
 
     ############################
@@ -68,6 +105,17 @@ class VideoCV:
 
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.frame_start)
 
+    def release_video_capture(self):
+        # release the capture
+        self.cap.release()
+        self.out.release()
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+        
+        sys.stdout.write("\n")
+        sys.stdout.write("       Video capture released.\n")
+        sys.stdout.flush()
+
 
     def get_frame(self):
         if self.cap.isOpened():
@@ -82,7 +130,29 @@ class VideoCV:
                 return True
         return False
 
-    def write_frame(self):
+        if gpu_on:
+            final = cv2.UMat.get(final)
+ 
+        out.write(final)
+        if ( args.online_viewer ):
+            cv2.imshow('frame', final) 
+            return_key = 13
+            esc_key    = 27 
+            space_key  = 32
+            if cv2.waitKey(33) == esc_key:
+                break
+            elif cv2.waitKey(33) == space_key:
+                while(True):
+                    k = cv2.waitKey(33)
+                    if k == return_key:
+                        break
+                    elif k == -1:
+                        continue
+
+    def set_frame(self):
+        if gpu_on:
+            self.frame = cv2.UMat.get(self.frame)
+
         self.out.write(self.frame)
         if ( self.online_viewer ):
             cv2.imshow('frame', self.frame) 
@@ -100,6 +170,14 @@ class VideoCV:
                         continue
         return 1
 
+    def print_current_frame(self):
+        t_csc = int(self.frame_num/self.trial.fps * 100)
+        t_sec = int(t_csc/100) 
+        t_min = t_sec/60
+        t_hor = t_min/60
+        sys.stdout.write("       Current tracking time: %02i:%02i:%02i:%02i \r" % (t_hor,t_min%60,t_sec%60,t_csc%100))
+        sys.stdout.flush()
+        
 
     ############################
     # Contour functions

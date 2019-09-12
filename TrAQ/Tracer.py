@@ -1,49 +1,22 @@
 import sys, os
 import argparse
-import cv2
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
+from TrAQ.Trial import Trial
+from TrAQ.VideoCV import VideoCV
 
 
 class Tracer:
     
-    def __init__(self, n_ind):
-        self.n_ind              = n_ind
-        self.fvideo_in          = ""
-        self.fvideo_out         = ""
-        self.fdata              = ""
-        self.RGB                = False
-        self.block_size         = 15
-        self.threshhold_offset  = 13
-        self.fps                = 30
-        self.gpu                = False
-        self.colors             = [ (   0,   0, 255),
-                                    (   0, 255, 255),
-                                    ( 255,   0, 255),
-                                    ( 255, 255, 255),
-                                    ( 255, 255,   0),
-                                    ( 255,   0,   0),
-                                    (   0, 255,   0),
-                                    (   0,   0,   0) ]
+    def __init__(self, trial = Trial(), videocv = VideoCV()):
         
-        
-    def random_color_list(self):
-        colors = []
-        low = 0
-        high = 255
-        for i in range(self.n_ind):
-            color = []
-            for i in range(3):
-                color.append(np.uint8(np.random.random_integers(low,high)))
-            colors.append((color[0],color[1],color[2]))
-        print(colors)
-        return colors
+        self.trial              = trial
+        self.videocv            = videocv
 
-
-    def print_title(self, trial):
+    def print_title(self):
         sys.stdout.write("\n\n")
         sys.stdout.write("   ###########################################################\n")
         sys.stdout.write("   #                                                         #\n")
@@ -60,25 +33,16 @@ class Tracer:
         sys.stdout.write("                                 adam patch, fau, jupiter 2019\n")
         sys.stdout.write("                              github.com/patchmemory/cv-tracer\n")
         sys.stdout.write(" \n\n")
-        sys.stdout.write("       Tracing %i fish using video, \n" % trial.n)
-        sys.stdout.write("         %s \n" % (trial.fvideo_in))
+        sys.stdout.write("       Tracing %i fish using video, \n" % self.trial.n)
+        sys.stdout.write("         %s \n" % (self.trial.fvideo_in))
         sys.stdout.write(" \n\n")
         sys.stdout.write("       Writing output to \n")
         sys.stdout.write("\n")
         sys.stdout.write("         video: \n" )
-        sys.stdout.write("           %s \n" % (trial.fvideo_out))
+        sys.stdout.write("           %s \n" % (self.trial.fvideo_out))
         sys.stdout.write("         data: \n" )
-        sys.stdout.write("           %s \n" % (trial.fdata))
+        sys.stdout.write("           %s \n" % (self.trial.fdata))
         sys.stdout.write(" \n\n")
-        sys.stdout.flush()
-
-
-    def print_current_frame(self, frame_num, fps):
-        t_csc = int(frame_num/fps*100)
-        t_sec = int(t_csc/100) 
-        t_min = t_sec/60
-        t_hor = t_min/60
-        sys.stdout.write("       Current tracking time: %02i:%02i:%02i:%02i \r" % (t_hor,t_min%60,t_sec%60,t_csc%100))
         sys.stdout.flush()
 
 
@@ -233,3 +197,11 @@ class Tracer:
         sys.stdout.write("         ... done reorienting directors.")
         sys.stdout.write("\n\n")
         return q
+    
+    
+    def draw(self):
+        if ( len(self.videocv.contour_list) != self.trial.n ):
+            self.videocv.draw_contours(RGB=True)
+        self.videocv.points_draw(RGB=True)
+        self.videocv.directors_draw(RGB=True)
+        self.videocv.time_frame_label(RGB=True)
