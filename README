@@ -15,9 +15,10 @@
   birds-eye video of fish swimming in a tank, reviewing the results alongside
   video to check for errors, and analyzing the results across trials. 
 
-  Scripts for executing all of these tasks can be found in 
+  Scripts for executing all of these tasks can be found in the home directory
+  along with backups stored in the 
   
-    */scripts/ 
+    scripts/ 
   
   subdirectory of each base module (e.g. TrAQ/scripts, Analysis/scripts). 
 
@@ -28,7 +29,9 @@
     2. Analyzing results across trials 
     3. Reviewing kinematics alongside video 
 
-  This software can be easily modified to 
+  This software is designed in python with free libraries so that it may be
+  straightforwardly modified to incorporate more advanced methods of tracking
+  and analysis.
   
 
   #############################
