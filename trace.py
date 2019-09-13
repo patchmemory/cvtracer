@@ -1,18 +1,8 @@
-##################################################################################
-#
-#  this is a hacked version of tracktor, first composed by Vivekh Sridhar of
-#  the Couzin lab, the base be found here: github.com/vivekhsridhar/tracktor 
-#  
-#  using Sridhar's tracktor as a starting point, i have tuned parameters and
-#  modifed several features adhoc to study collective behavior of adult and
-#  larval astyanax mexicanus ---adam patch, fau jupiter, jan 2019
-#
-##################################################################################
+#!/usr/bin/python3
 import argparse
 from TrAQ.Trial import Trial
 from TrAQ.Tracer import Tracer
 from TrAQ.VideoCV import VideoCV
-
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="OpenCV2 Fish Tracker")

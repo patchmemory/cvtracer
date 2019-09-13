@@ -16,6 +16,7 @@ class Trial:
 
         self.fname_std = 'trial.pik'
         self.fvideo_raw_std = 'raw.mp4'
+        self.fvideo_out_std = 'traced.mp4'
                     
         self.fvideo_raw = os.path.abspath(fvideo)
         if self.fvideo_raw.split('/')[-1] != self.fvideo_raw_std:
@@ -39,7 +40,6 @@ class Trial:
             self.date        = date
 
         self.save()
-
 
     def parse_fname(self, date = None):
         fname_tmp = self.fvideo_raw.split('/')[:-1]
@@ -116,6 +116,10 @@ class Trial:
                 os.rename( os.path.abspath(self.fvideo_raw),
                            os.path.abspath(f_new) )
                 self.fvideo_raw = f_new
+            else:
+                f_traced = "%s/%s/%s" % (vpath_remain,new_dir,self.fvideo_out_std)
+                if os.path.isfile(f_traced):
+                    exit()
 
 
     ######################################################
@@ -151,58 +155,64 @@ class Trial:
         for i in range(self.n):
             results.append(self.group.fish[i_fish].get_result(val_name, stat_name, tag))
         return np.array(results)
-    
-
-def organize_filenames(home_path, input_loc, video_output_dir, data_output_dir, output_str):
-    home_path = os.path.abspath(home_path)
-    video_output_dir = os.path.abspath(video_output_dir)
-    data_output_dir = os.path.abspath(data_output_dir)
-    if home_path in input_loc:
-        input_loc = input_loc.replace(home_path, '')
-    
-    video = input_loc.split('/')[-1]
-    video_dir = input_loc.split('/')[-2]
-    video_str = '.'.join(video.split('.')[:-1])
-    video_ext = '.' + video.split('.')[-1]
-    input_vidpath   = home_path + input_loc
-    output_vidpath  = home_path + video_output_dir + video_dir + "_" + video_str + '_' + output_str + video_ext 
-    output_filepath = home_path + data_output_dir + video_dir + "_" + video_str + '_' + output_str + "_kinematics.npy" 
-    output_text     = home_path + data_output_dir + video_dir + "_" + video_str + '_' + output_str + ".dat" 
-    if ( video_ext == ".avi" ):
-        codec = 'DIVX' 
-    else:
-        codec = 'mp4v'
-    # try other codecs if the default doesn't work (e.g. 'DIVX', 'avc1', 'XVID') 
-    return input_vidpath, output_vidpath, output_filepath, output_text, codec
-
-
-def calculate_kinematics():
-        q = np.load(output_filepath)
-        sys.stdout.write("\n")
-        sys.stdout.write("       Converting pixels to (x,y) space in (cm,cm).\n")
-        sys.stdout.flush()
-        for i in range(len(q)):
-            q[i].convert_pixels(tank.row_c,tank.col_c,tank.r,tank_radius_cm)
-            q[i].tstamp_reformat(fps)
-        sys.stdout.write("\n")
-        sys.stdout.write("       %s converted according to tank size and location.\n" % output_filepath)
-        sys.stdout.flush()
         
-        sys.stdout.write("\n")
-        sys.stdout.write("       Calculating kinematics...\n")
-        sys.stdout.flush()
-        for i in range(len(q)):
-            print("         Fish %2i" % (i+1)) 
-            q[i].calculate_dwall(tank_radius_cm)
-            q[i].calculate_velocity(fps)
-            q[i].calculate_acceleration(fps)
-            q[i].calculate_director(fps)
-            q[i].calculate_angular_velocity(fps)
-            q[i].calculate_angular_acceleration(fps)
-            q[i].calculate_local_acceleration(fps)
     
-        np.save(output_filepath,q)
-      
-        sys.stdout.write("\n")
-        sys.stdout.write("       %s kinematic quantities have been calculated.\n" % output_filepath)
+    def convert_pixels_to_cm(self):
+        sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
         sys.stdout.flush()
+        self.group.convert_pixels(self.tank.row_c, self.tank.col_c, self.tank.r, self.tank.r_cm)
+        sys.stdout.write("\n       %s converted according to tank size and location" % self.fname )
+        sys.stdout.write("\n       as specified in %s" % self.tank.fname )
+        sys.stdout.flush()
+
+#    def transform_for_lens(self):
+#        sys.stdout.write("\n       Transforming to account for wide-angle lens.\n")
+#        sys.stdout.flush()
+#        self.group.lens_trasnformation(A,B,C)
+
+    def calculate_kinematics(self):           
+        sys.stdout.write("\n       Calculating kinematics...\n")
+        sys.stdout.flush()
+        self.group.calculate_dwall(self.tank.r_cm)
+        self.group.calculate_velocity(self.fps)
+        self.group.calculate_acceleration(self.fps)
+        self.group.calculate_director(self.fps)
+        self.group.calculate_angular_velocity(self.fps)
+        self.group.calculate_angular_acceleration(self.fps)
+        self.group.calculate_local_acceleration(self.fps)
+    
+        self.save()          
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... kinematics calculated for Trial and saved in\n")
+        sys.stdout.write("             %s \n" % self.fname)
+        sys.stdout.flush()
+
+    
+    def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
+                      ocut = None, vcut = None, wcut = None ):
+                
+        if ocut != None:
+            self.group.cut_occlusion(ocut, n_buffer_frames)
+        if vcut != None:
+            self.group.cut_speed(vcut, n_buffer_frames)
+        if wcut != None:
+            self.group.cut_omega(wcut, n_buffer_frames)
+        
+        mean = {}
+        err = {}
+        mean['ocut'], err['ocut'], mean['vcut'], err['vcut'], \
+        mean['wcut'], err['wcut'], mean['cut'], err['cut'] = self.group.cut_stats(frame_range)
+        self.cuts_stats = { 'mean': mean, 'err': err }
+
+
+    def calculate_statistics(self, 
+                             val_name  = [ 'dwall', 'speed', 'omega' ], 
+                             val_range = [    None,    None,    None ], 
+                             val_symm  = [   False,   False,    True ],
+                             frame_range = None, nbins = 100,
+                             ocut = False, vcut = False, wcut = False):
+        
+        for i in range(len(val_name)):
+            self.group.calculate_stats(val_name[i], val_range[i], val_symm[i],
+                        frame_range = frame_range, nbins = nbins,
+                        ocut = ocut, vcut = vcut, wcut = wcut )

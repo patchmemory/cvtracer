@@ -22,4 +22,3 @@ args = arg_parse()
 trial = Trial(args.raw_video, n = args.n_individual, t = args.fish_type, date = args.date,
               fps = args.frames_per_second, tank_radius = args.tank_diameter/2., 
               t_start = args.t_start, t_end = args.t_end)
-

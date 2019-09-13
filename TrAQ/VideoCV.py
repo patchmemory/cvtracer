@@ -193,9 +193,9 @@ class VideoCV:
     def detect_contours(self):
         self.threshold_detect()
         # find all contours 
-        img, self.contours, hierarchy = cv2.findContours( self.thresh, 
-                                                          cv2.RETR_TREE, 
-                                                          cv2.CHAIN_APPROX_SIMPLE )
+        self.contours, hierarchy = cv2.findContours( self.thresh, 
+                                                     cv2.RETR_TREE, 
+                                                     cv2.CHAIN_APPROX_SIMPLE )
         # test found contours against area constraints
         i = 0
         while i < len(self.contours):
@@ -407,7 +407,11 @@ class VideoCV:
         row_c = int(tank.row_c) + 1
         col_c = int(tank.col_c) + 1
         R = int(tank.r) + 1
-        tank_mask = np.zeros_like(self.frame)
+        if self.RGB:
+            tank_mask = np.zeros_like(self.frame)
+        else:
+            tank_mask = cv2.UMat(np.zeros_like(self.frame))
+        
         cv2.circle(tank_mask, (row_c,col_c), R, (255, 255, 255), thickness=-1)
         self.frame = cv2.bitwise_and(self.frame, tank_mask)
 

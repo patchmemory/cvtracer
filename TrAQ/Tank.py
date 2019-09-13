@@ -15,8 +15,10 @@ class Tank:
         self.r_cm    = r_cm
         self.found   = False
         self.frame   = None
-        self.fname   = ""
+
         self.fvideo  = fvideo
+        self.fname = '/'.join(self.fvideo.split('/')[0:-1]) \
+                                                    + "/tank.pik"
 
 
     def save(self, fname = None):
@@ -44,6 +46,19 @@ class Tank:
             sys.stdout.write("\n        Tank not found %s \n" % self.fname)
             sys.stdout.flush()
             return False
+
+    def load_txt(self, fname_txt = None):
+        try:
+            f = open(fname_txt,'r')
+            f.readline()
+            vals = f.readline().split(' ')
+            vals = np.array(vals, dtype = float)
+            self.row_c = vals[0]
+            self.col_c = vals[1]
+            self.r     = vals[2]
+        except:
+            print("    Cannot locate %s!" % fname)
+            exit()
 
 
     def print_info(self):
@@ -116,7 +131,6 @@ class Tank:
 
     def locate(self):
 
-        self.fname = '/'.join(self.fvideo.split('/')[0:-1]) + "/tank.pik"
 
         frame_start = 0
         frame_end   = 0

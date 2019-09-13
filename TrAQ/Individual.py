@@ -10,6 +10,7 @@ class Individual:
         d = {'t': [], 'x': [], 'y': [], 'theta': [] }    
         self.df = pd.DataFrame( data=d, dtype=np.float64 )
         self.result = {}
+        self.val_range = {}
 
     def n_frames(self):
         return len(self.df.index)
@@ -67,6 +68,7 @@ class Individual:
     def calculate_director(self,fps,theta_replace=False):
         if 'vx' not in self.df.columns or 'vy' not in self.df.columns:
             self.calculate_velocity()
+        if 'ex' not in self.df.columns or 'ey' not in self.df.columns:
             self.df['ex'] = self.df.vx / self.df.speed 
             self.df['ey'] = self.df.vy / self.df.speed
         if theta_replace:
@@ -111,126 +113,148 @@ class Individual:
         if math.isclose(mean_dt,expected_dt,rel_tol=0.01/fps):
             factor = expected_dt / mean_dt 
             self.df.t *= factor
-
-
-    # speed_cut(...) is used to determine frames to be cut for being out of the 
-    # valid range of speeds
-    def speed_cut(self,speed_min=1.,speed_max=100,n_buffer_frames=2):
-        if 'speed_cut' not in self.df.columns:
-            if 'speed' not in self.df.columns:
-                self.calculate_velocity()
-        
-            self.df['speed_cut'] = self.df[['speed']].apply(lambda row: 
-                        (row[0] < speed_min or row[0] > speed_max ), axis=1)
-            for j_frame in range(1,n_buffer_frames+1):
-                self.df['speed_cut'] = ( self.df['speed_cut'] \
-                            | self.df.speed_cut.shift(-j_frame) \
-                            | self.df.speed_cut.shift(j_frame) )
-
-    # distance_cut(...) is used to determine frames to be cut at too short a 
-    # range, default of zero. This is a way to remove occlusions in post-
-    # processing under the assumption that the tracking module outputs occlusions
-    # as two fish with the same center-point
-    def distance_cut(self,distance_nn,d_min=0,n_buffer_frames=2):
-        if 'd_cut' not in self.df.columns:
-            distance_nn = np.array(distance_nn)
-            d_cut_bool = np.logical_not(distance_nn > d_min)
-            self.df['d_cut'] = d_cut_bool 
-
-        for j_frame in range(1,n_buffer_frames+1):
-            self.df['d_cut'] = ( self.df['d_cut'] \
-                                | self.df.d_cut.shift(-j_frame) \
-                                | self.df.d_cut.shift(j_frame) )
     
-    def distance_cut_null(self):
-        if 'd_cut' not in self.df.columns:
-            self.df['d_cut'] = False
+    # cut_omega(...) generates list of frames to be cut based on their angular speed
+    def cut_omega(self, omega_range = [ -40., 40. ], n_buffer_frames = 2):
+        if 'omega' not in self.df.columns:
+            self.calculate_angular_velocity()
+    
+        self.df['wcut'] = self.df[['omega']].apply(lambda row: 
+                    (row[0] < omega_range[0] or row[0] > omega_range[1]), axis=1)
+        for j_frame in range(1,n_buffer_frames+1):
+            self.df['wcut'] = ( self.df['wcut'] 
+                        | self.df.wcut.shift(-j_frame) 
+                        | self.df.wcut.shift( j_frame) )
+
+    # cut_speed(...) generates list of frames to be cut based on their speed
+    def cut_speed(self, speed_range = [ 1., 100. ], n_buffer_frames = 2 ):
+        if 'speed' not in self.df.columns:
+            self.calculate_velocity()
+
+        self.df['vcut'] = self.df[['speed']].apply(lambda row: 
+                    (row[0] < speed_range[0] or row[0] > speed_range[1]), axis=1)
+        for j_frame in range(1,n_buffer_frames+1):
+            self.df['vcut'] = ( self.df['vcut'] 
+                        | self.df.vcut.shift(-j_frame) 
+                        | self.df.vcut.shift( j_frame) )
+
+    # cut_occlusion(...) generates a list of frames to be cut for being too 
+    # close (occluded fish are set with same position, so d_ij = 0)
+    def cut_occlusion(self, d_min = 0, n_buffer_frames = 2, d_nn = None):
+        if d_nn != None:
+            self.add_distance_nn(d_nn)
+            
+        elif 'd_nn' not in self.df.columns:
+            print("  Nearest neighbor distance not available, and cannot be calculated by an Individual. Please first calculate and store neighbor distances")
+            return 
+            
+        self.df['ocut'] = np.logical_not(self.df['d_nn'] > d_min)
+
+        for j_frame in range(1, n_buffer_frames + 1):
+            self.df['ocut'] = ( self.df['ocut'] 
+                              | self.df.ocut.shift(-j_frame) 
+                              | self.df.ocut.shift( j_frame) )
+    
+    def cut_occlusion_null(self):
+        self.df['ocut'] = False
+
+
+    def valid_frame_fraction(self, frame_range = None, cut_name = 'cut'):
+        framei = frame_range[0]
+        framef = frame_range[1]
+        n_cut = 1.*sum(self.df[cut_name][framei:framef])
+        n_tot = 1.*len(self.df[cut_name][framei:framef])
+        return 1. - n_cut / n_tot
+
 
     def total_frames_occlusion(self,framei,framef):
-        return float(sum(self.df['d_cut'][framei:framef]))/len(self.df['d_cut'][framei:framef])
+        return float(sum(self.df['ocut'][framei:framef]))/len(self.df['ocut'][framei:framef])
 
     def total_frames_inactive(self,framei,framef):
-        return float(sum(self.df['speed_cut'][framei:framef]))/len(self.df['speed_cut'][framei:framef])
+        return float(sum(self.df['vcut'][framei:framef]))/len(self.df['vcut'][framei:framef])
 
     def total_frames_cut(self,framei,framef):
-        n_cut = sum(self.df['speed_cut'][framei:framef] | self.df['d_cut'][framei:framef])
-        return float(n_cut)/len(self.df['speed_cut'][framei:framef])
+        n_cut = sum(self.df['vcut'][framei:framef] | self.df['ocut'][framei:framef])
+        return float(n_cut)/len(self.df['vcut'][framei:framef])
 
     # cut_array(...) generates a mask based on cuts, providing boolean values
     # that represent frames to be cut. User specifies cuts which must be 
     # completed prior to running this function.
-    def cut_array(self,arr,vcut=False,ocut=False):
+    def cut_array(self, arr, ocut = False, vcut = False, wcut = False ):
         
-        cut_arr = np.zeros_like(arr,dtype=bool)
-        if vcut:
-            if 'speed_cut' not in self.df.columns:
-                print("\n No speed cut column found in DataFrame. Skipping speed cut.\n")
-        else:
-            vcut_arr = self.df['speed_cut']
-            cut_arr = cut_arr | vcut_arr
-            
-        if ocut:
-            if 'd_cut' not in self.df.columns:
-                print("\n No occlusion cut column found in DataFrame. Skipping occlusion cut.\n")
-            else:
-                ocut_arr = self.df['d_cut']
-                cut_arr = cut_arr | ocut_arr
-                
-        return cut_arr 
+        self.cut_arr = np.zeros_like(arr,dtype=bool)
 
+        if ocut:
+            if 'ocut' not in self.df.columns:
+                print("\n No occlusion cut column found in DataFrame, generating now...\n")
+
+            ocut_arr = self.df['ocut']
+            self.cut_arr = self.cut_arr | ocut_arr
+        
+        if vcut:
+            if 'vcut' not in self.df.columns:
+                print("\n No speed cut column found in DataFrame, generating now... \n")
+
+            vcut_arr = self.df['vcut']
+            self.cut_arr = self.cut_arr | vcut_arr
+            
+        if wcut:
+            if 'wcut' not in self.df.columns:
+                print("\n No angular speed cut column found in DataFrame, generating now... \n")
+
+            wcut_arr = self.df['wcut']
+            self.cut_arr = self.cut_arr | wcut_arr
+
+            
 
     # calculate_stats(...) takes the name of a value and calculates its 
     # statistics across valid frames. User can specify a range of values and a 
     # range of time, along with whether or not to use speed and occlusion cuts. 
     # Also has option to make data symmetric about the origin, for use with 
     # angular speed statistics.
-    def calculate_stats(self, val_name, valmin = None, valmax = None,
-                        framei = 0, framef = None, vcut = False, ocut = False, 
-                        nbins = 100, hrange = None, symm = False):
+    def calculate_stats(self, val_name, val_range = None, val_symm = False,
+                        frame_range = None, nbins = 100,
+                        ocut = False, vcut = False, wcut = False):
 
         if val_name not in self.df.columns:
-            print("\n  %s not found in DataFrame. Skipping calculation of mean.\n" % val_name)
+            print("\n  %s not found in DataFrame. Skipping statistics...\n" % val_name)
       
         else:
             arr = np.array(self.df[val_name])
-            cut_arr = self.cut_array(arr,vcut,ocut)
-            arr = arr[np.logical_not(cut_arr)]
-            if framef == None:
-                framef = len(arr)
-        
-            arr = arr[framei:framef]
-            if valmin != None:
-                arr = arr[arr >= valmin]
-            if valmax != None:
-                arr = arr[arr <= valmax]
+            self.cut_array(arr, ocut, vcut, wcut)
+            arr = arr[np.logical_not(self.cut_arr)]
+            if frame_range == None:
+                frame_range[0] = 0
+                frame_range[1] = len(arr)
                 
-            if symm: arr = np.concatenate((arr,-arr))
+            arr = arr[frame_range[0]:frame_range[1]]
+            if val_range != None:
+                if val_range[0] != None:
+                    arr = arr[arr >= val_range[0]]
+                if val_range[1] != None:
+                    arr = arr[arr <= val_range[1]]
+                
+            if val_symm: 
+                arr = np.concatenate((arr,-arr))
       
         mean = np.mean(arr)
         stdd = np.std(arr)
         kurt = spstats.kurtosis(arr,fisher=False)
-        hist = np.histogram(arr, bins=nbins, range=hrange, density=True)
+        hist = np.histogram(arr, bins=nbins, range=val_range, density=True)
         
         self.store_result(mean, val_name, 'mean')
         self.store_result(stdd, val_name, 'stdd') 
         self.store_result(kurt, val_name, 'kurt')
         self.store_result(hist, val_name, 'hist')
-        
-#        self.result[self.result_key(val_name, 'mean')] = np.mean(arr) 
-#        self.result[self.result_key(val_name, 'stdd')] = np.std(arr)
-#        self.result[self.result_key(val_name, 'kurt')] = spstats.kurtosis(arr,fisher=False)
-#        self.result[self.result_key(val_name, 'hist')] = np.histogram(arr, bins=nbins, range=hrange, density=True)
 
 
-      
-    # Functions for storing and recalling results    
     def result_key(self, val_name, stat_name, tag = None):
         return "%s_%s_%s" % (val_name, stat_name, tag)
         
     def get_result(self, val_name, stat_name, tag = None):
-        k = self.result_key(val_name, stat_name)
+        k = self.result_key(val_name, stat_name, tag)
         return self.result[k]
     
     def store_result(self, result, val_name, stat_name, tag = None):
-        k = self.result_key(val_name, 'mean')
-  
+        k = self.result_key(val_name, stat_name, tag)
+        self.result[k] = result
