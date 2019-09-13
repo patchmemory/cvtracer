@@ -9,6 +9,7 @@ class Tracer:
         
         self.trial   = trial
         self.videocv = videocv
+        
 
     def print_title(self):
         sys.stdout.write("\n\n")
@@ -38,8 +39,8 @@ class Tracer:
         sys.stdout.write("           %s \n" % (self.trial.fname))
         sys.stdout.write(" \n\n")
         sys.stdout.flush()
-    
-    
+
+
     def draw(self):
         self.videocv.draw_tank(self.trial.tank)
         if ( len(self.videocv.contour_list) != self.trial.n ):
@@ -47,9 +48,11 @@ class Tracer:
         self.videocv.draw_points()
         self.videocv.draw_directors()
         self.videocv.draw_tstamp()
+
     
     def mask_tank(self):
         self.videocv.mask_tank(self.trial.tank)
+
 
     def connect_frames(self):
         n_contours = len(self.videocv.contours)

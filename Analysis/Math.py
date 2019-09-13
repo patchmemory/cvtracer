@@ -19,19 +19,20 @@ class Coordinate:
 
     
 
-def mean_and_err(self, l, hist=False):
+def mean_and_err(l):
     l = np.array(l)
     mean_tmp = np.nanmean(l)
     err_tmp = np.nanstd(l) / np.sqrt(sum(~np.isnan(l)))
     return np.array([mean_tmp, err_tmp])
 
-def mean_and_err_hist(self, l, nbins):
+def mean_and_err_hist(l, nbins):
     l = np.array(l)
     # first test that all entries have desired number of bins
-    valid = [ True for i in len(l) ]
+    valid = [ True for entry in l ]
     for i in range(len(l)):
-        if len(l) != nbins:
-            print("Incorrect number of bins in array %i." % i)
+        if len(l[i]) != nbins:
+            print("  Incorrect number of bins in array %i." % i)
+            print("  Found n = %i but expected n = %i." % (len(l[i]), nbins))
             valid[i] = False
         
     hist_mean = np.zeros((nbins,2),dtype=float)

@@ -1,0 +1,355 @@
+nohup: ignoring input
+119
+data/20190208_SF_n20_t1_2325
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190208_SF_n20_t1_2325/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190208_SF_n20_t1_2325/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190208_SF_n20_t1_2325/trial.pik converted according to tank size and location
+       as specified in data/20190208_SF_n20_t1_2325/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190208_SF_n20_t1_2325/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190208_SF_n20_t1_2325/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190208_SF_n20_t1_2325/trial.pik 
+81
+data/20190506_Pa_n2_t1_3044
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t1_3044/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t1_3044/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t1_3044/trial.pik converted according to tank size and location
+       as specified in data/20190506_Pa_n2_t1_3044/tank.pik
+       Calculating kinematics...
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3525, in _ensure_valid_index
+    value = Series(value)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/series.py", line 313, in __init__
+    data = SingleBlockManager(data, index, fastpath=True)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/managers.py", line 1516, in __init__
+    block = make_block(block, placement=slice(0, len(axis)), ndim=1)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/blocks.py", line 3267, in make_block
+    return klass(values, ndim=ndim, placement=placement)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/blocks.py", line 2775, in __init__
+    super().__init__(values, ndim=ndim, placement=placement)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/blocks.py", line 128, in __init__
+    "{mgr}".format(val=len(self.values), mgr=len(self.mgr_locs))
+ValueError: Wrong number of items passed 7, placement implies 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "cv-tracer/process.py", line 18, in <module>
+    trial.calculate_kinematics()
+  File "/disk1/astyanax-mexicanus/cv-tracer/TrAQ/Trial.py", line 176, in calculate_kinematics
+    self.group.calculate_dwall(self.tank.r_cm)
+  File "/disk1/astyanax-mexicanus/cv-tracer/TrAQ/Group.py", line 68, in calculate_dwall
+    self.fish[i_fish].calculate_dwall(tank_radius)
+  File "/disk1/astyanax-mexicanus/cv-tracer/TrAQ/Individual.py", line 59, in calculate_dwall
+    ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3472, in __setitem__
+    self._set_item(key, value)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3548, in _set_item
+    self._ensure_valid_index(value)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3528, in _ensure_valid_index
+    "Cannot set a frame with no defined index "
+ValueError: Cannot set a frame with no defined index and a value that cannot be converted to a Series
+80
+data/20190506_Pa_n2_t2_3102
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t2_3102/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t2_3102/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t2_3102/trial.pik converted according to tank size and location
+       as specified in data/20190506_Pa_n2_t2_3102/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t2_3102/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t2_3102/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n2_t2_3102/trial.pik 
+77
+data/20190506_Pa_n5_t3_3046
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190506_Pa_n5_t3_3046/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n5_t3_3046/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190506_Pa_n5_t3_3046/trial.pik converted according to tank size and location
+       as specified in data/20190506_Pa_n5_t3_3046/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n5_t3_3046/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190506_Pa_n5_t3_3046/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n5_t3_3046/trial.pik 
+67
+data/20190513_SF_n5_t5_3128
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190513_SF_n5_t5_3128/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190513_SF_n5_t5_3128/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190513_SF_n5_t5_3128/trial.pik converted according to tank size and location
+       as specified in data/20190513_SF_n5_t5_3128/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190513_SF_n5_t5_3128/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190513_SF_n5_t5_3128/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190513_SF_n5_t5_3128/trial.pik 
+59
+data/20190516_Mo_n2_t2_3114
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190516_Mo_n2_t2_3114/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190516_Mo_n2_t2_3114/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190516_Mo_n2_t2_3114/trial.pik converted according to tank size and location
+       as specified in data/20190516_Mo_n2_t2_3114/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190516_Mo_n2_t2_3114/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190516_Mo_n2_t2_3114/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190516_Mo_n2_t2_3114/trial.pik 
+54
+data/20190521_Pa_n2_t3_3150
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190521_Pa_n2_t3_3150/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190521_Pa_n2_t3_3150/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190521_Pa_n2_t3_3150/trial.pik converted according to tank size and location
+       as specified in data/20190521_Pa_n2_t3_3150/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190521_Pa_n2_t3_3150/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190521_Pa_n2_t3_3150/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190521_Pa_n2_t3_3150/trial.pik 
+51
+data/20190521_Pa_n5_t3_3208
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190521_Pa_n5_t3_3208/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190521_Pa_n5_t3_3208/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190521_Pa_n5_t3_3208/trial.pik converted according to tank size and location
+       as specified in data/20190521_Pa_n5_t3_3208/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190521_Pa_n5_t3_3208/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190521_Pa_n5_t3_3208/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190521_Pa_n5_t3_3208/trial.pik 
+46
+data/20190531_SF_n1_t2_3131
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190531_SF_n1_t2_3131/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t2_3131/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190531_SF_n1_t2_3131/trial.pik converted according to tank size and location
+       as specified in data/20190531_SF_n1_t2_3131/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t2_3131/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190531_SF_n1_t2_3131/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t2_3131/trial.pik 
+42
+data/20190603_SF_n5_t2_3238
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190603_SF_n5_t2_3238/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190603_SF_n5_t2_3238/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190603_SF_n5_t2_3238/trial.pik converted according to tank size and location
+       as specified in data/20190603_SF_n5_t2_3238/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190603_SF_n5_t2_3238/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190603_SF_n5_t2_3238/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190603_SF_n5_t2_3238/trial.pik 
+35
+data/20190607_Pa_n1_t4_3235
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t4_3235/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t4_3235/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t4_3235/trial.pik converted according to tank size and location
+       as specified in data/20190607_Pa_n1_t4_3235/tank.pik
+       Calculating kinematics...
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3525, in _ensure_valid_index
+    value = Series(value)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/series.py", line 313, in __init__
+    data = SingleBlockManager(data, index, fastpath=True)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/managers.py", line 1516, in __init__
+    block = make_block(block, placement=slice(0, len(axis)), ndim=1)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/blocks.py", line 3267, in make_block
+    return klass(values, ndim=ndim, placement=placement)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/blocks.py", line 2775, in __init__
+    super().__init__(values, ndim=ndim, placement=placement)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/internals/blocks.py", line 128, in __init__
+    "{mgr}".format(val=len(self.values), mgr=len(self.mgr_locs))
+ValueError: Wrong number of items passed 7, placement implies 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "cv-tracer/process.py", line 18, in <module>
+    trial.calculate_kinematics()
+  File "/disk1/astyanax-mexicanus/cv-tracer/TrAQ/Trial.py", line 176, in calculate_kinematics
+    self.group.calculate_dwall(self.tank.r_cm)
+  File "/disk1/astyanax-mexicanus/cv-tracer/TrAQ/Group.py", line 68, in calculate_dwall
+    self.fish[i_fish].calculate_dwall(tank_radius)
+  File "/disk1/astyanax-mexicanus/cv-tracer/TrAQ/Individual.py", line 59, in calculate_dwall
+    ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3472, in __setitem__
+    self._set_item(key, value)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3548, in _set_item
+    self._ensure_valid_index(value)
+  File "/usr/local/lib/python3.6/dist-packages/pandas/core/frame.py", line 3528, in _ensure_valid_index
+    "Cannot set a frame with no defined index "
+ValueError: Cannot set a frame with no defined index and a value that cannot be converted to a Series
+34
+data/20190612_SF_n10_t1_3021
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190612_SF_n10_t1_3021/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n10_t1_3021/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190612_SF_n10_t1_3021/trial.pik converted according to tank size and location
+       as specified in data/20190612_SF_n10_t1_3021/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n10_t1_3021/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190612_SF_n10_t1_3021/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n10_t1_3021/trial.pik 
+18
+data/20190710_Pa_n1_t3_3516
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t3_3516/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t3_3516/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t3_3516/trial.pik converted according to tank size and location
+       as specified in data/20190710_Pa_n1_t3_3516/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t3_3516/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t3_3516/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t3_3516/trial.pik 
+15
+data/20190710_Pa_n1_t6_3101
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t6_3101/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t6_3101/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t6_3101/trial.pik converted according to tank size and location
+       as specified in data/20190710_Pa_n1_t6_3101/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t6_3101/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t6_3101/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n1_t6_3101/trial.pik 
+11
+data/20190724_SF_n10_t1_3111
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190724_SF_n10_t1_3111/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190724_SF_n10_t1_3111/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190724_SF_n10_t1_3111/trial.pik converted according to tank size and location
+       as specified in data/20190724_SF_n10_t1_3111/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190724_SF_n10_t1_3111/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190724_SF_n10_t1_3111/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190724_SF_n10_t1_3111/trial.pik 
+0
+none left

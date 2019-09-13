@@ -114,27 +114,54 @@ class Group:
                 distance_nn = self.dij_mij[i_fish][:,0]
                 distance_nn = distance_nn[:,0]
                 #print("distance_nn",distance_nn)
-                print("\n\n  ... for fish %i via zeroed distances..." % i_fish)
+                print("    ... for fish %i, " % i_fish)
                 self.fish[i_fish].cut_occlusion(d_min, n_buffer_frames, distance_nn)
         else:
             print("\n\n  No occlusion cuts to make for single fish.")
             self.fish[0].cut_occlusion_null()
 
     # cut_omega(...) generates list of frames to be cut based on their angular speed
-    def cut_omega(self, omega_range = [ -40., 40. ], n_buffer_frames = 2):
+    def cut_omega(self, fps = 30, omega_range = [ -40., 40. ], n_buffer_frames = 2):
         print("\n\n  Generating angular speed cut using range [%4.2f, %4.2f] rad/s with %i buffer frames" 
                                                % (omega_range[0], omega_range[1], n_buffer_frames))
         for i_fish in range(self.n_fish()):
             print("    ... for fish %i, " % i_fish)
-            self.fish[i_fish].cut_omega(omega_range, n_buffer_frames)
+            self.fish[i_fish].cut_omega(fps, omega_range, n_buffer_frames)
 
     # cut_speed(...) generates list of frames to be cut based on their speed
-    def cut_speed(self, speed_range = [ 1., 100. ], n_buffer_frames=2):
+    def cut_speed(self, fps = 30, speed_range = [ 1., 100. ], n_buffer_frames=2):
         print("\n\n  Generating speed cut using range [%4.2f, %4.2f] cm/s with %i buffer frames" 
                                                % (speed_range[0], speed_range[1], n_buffer_frames))
         for i_fish in range(self.n_fish()):
             print("    ... for fish %i, " % i_fish)
-            self.fish[i_fish].cut_speed(speed_range, n_buffer_frames)
+            self.fish[i_fish].cut_speed(fps, speed_range, n_buffer_frames)
+
+    # cut_speed(...) generates list of frames to be cut based on their speed
+    def cut_combine(self):
+        print("\n\n  Combining all cuts.... ")
+        for i_fish in range(self.n_fish()):
+            print("    ... for fish %i, " % i_fish)
+            self.fish[i_fish].cut_all()
+
+
+
+
+    def cut_stats(self, framei, framef):
+        valid = {'ocut': [], 'vcut': [], 'wcut': [], 'cut': [] }
+        for i_fish in range(self.n_fish()):
+            for key in valid:
+                valid[key].append(
+                        self.fish[i_fish].valid_frame_fraction(
+                                                [framei, framef], key))
+        mean = {}
+        err  = {}
+        for key in valid:
+            valid[key] = np.array(valid[key])
+            mean[key]  = np.mean(valid[key])
+            err[key]   = np.std(valid[key])/np.sqrt(len(valid[key]))
+        
+        return mean, err
+
 
 
     def alignment(self,i,j,theta):
@@ -152,7 +179,7 @@ class Group:
         for i_fish in range(self.n_fish()):
             x[i_fish] = np.array(self.fish[i_fish].df['x'].tolist())
             y[i_fish] = np.array(self.fish[i_fish].df['y'].tolist())
-            e[i_fish] = np.array(self.fish[i_fish].df['etheta'].tolist())
+            e[i_fish] = np.array(self.fish[i_fish].df['theta'].tolist())
         x = np.array(x)
         y = np.array(y)
         e = np.array(e)
@@ -235,26 +262,6 @@ class Group:
         return n_dist
 
 
-    def cut_stats(self,framei,framef):
-        frac_ocut = []
-        frac_vcut = []
-        frac_wcut = []
-        frac_cut  = []
-        for i_fish in range(self.n_fish()):
-            frac_ocut.append(self.fish[i_fish].n_frames_ocut(framei,framef))
-            frac_vcut.append(self.fish[i_fish].n_frames_vcut(framei,framef))
-            frac_wcut.append(self.fish[i_fish].n_frames_wcut(framei,framef))
-            frac_cut.append( self.fish[i_fish].n_frames_cut(framei,framef) )
-        frac_ocut = np.array(frac_ocut)
-        frac_vcut = np.array(frac_vcut)
-        frac_wcut = np.array(frac_wcut)  
-        frac_cut  = np.array(frac_cut) 
-        return np.mean(frac_ocut), np.std(frac_ocut)/np.sqrt(len(frac_ocut)), \
-               np.mean(frac_vcut), np.std(frac_vcut)/np.sqrt(len(frac_vcut)), \
-               np.mean(frac_wcut), np.std(frac_wcut)/np.sqrt(len(frac_wcut)), \
-               np.mean(frac_cut), np.std(frac_cut)/np.sqrt(len(frac_cut))
-
-
     # calculate_stats(...) takes the name of a value and calculates its 
     # statistics across individuals in the group. User can specify a range of 
     # values and a range of time, along with whether or not to use speed and 
@@ -271,7 +278,7 @@ class Group:
 
         for i_fish in range(self.n_fish()):
             self.fish[i_fish].calculate_stats( val_name, val_range, val_symm,
-                                               frame_range = None, nbins = 100,
+                                               frame_range = frame_range, nbins = nbins,
                                                ocut = ocut, vcut = vcut, wcut = wcut)
             for key in stat_keys:
                 stat_list[key].append(self.fish[i_fish].get_result(val_name,key))

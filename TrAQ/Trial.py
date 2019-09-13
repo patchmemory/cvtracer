@@ -187,21 +187,25 @@ class Trial:
         sys.stdout.write("             %s \n" % self.fname)
         sys.stdout.flush()
 
+    def calculate_pairwise(self):
+        self.group.calculate_distance_alignment()
     
     def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
                       ocut = None, vcut = None, wcut = None ):
-                
+        
         if ocut != None:
             self.group.cut_occlusion(ocut, n_buffer_frames)
         if vcut != None:
-            self.group.cut_speed(vcut, n_buffer_frames)
+            self.group.cut_speed(self.fps, vcut, n_buffer_frames)
         if wcut != None:
-            self.group.cut_omega(wcut, n_buffer_frames)
+            self.group.cut_omega(self.fps, wcut, n_buffer_frames)
         
-        mean = {}
-        err = {}
-        mean['ocut'], err['ocut'], mean['vcut'], err['vcut'], \
-        mean['wcut'], err['wcut'], mean['cut'], err['cut'] = self.group.cut_stats(frame_range)
+        self.group.cut_combine()
+        
+        if frame_range == None:
+            frame_range = [ int(self.frame_start), int(self.frame_end) ]
+            
+        mean, err = self.group.cut_stats(frame_range[0],frame_range[1])
         self.cuts_stats = { 'mean': mean, 'err': err }
 
 
@@ -209,10 +213,11 @@ class Trial:
                              val_name  = [ 'dwall', 'speed', 'omega' ], 
                              val_range = [    None,    None,    None ], 
                              val_symm  = [   False,   False,    True ],
-                             frame_range = None, nbins = 100,
+                             val_bins  = [     100,     100,     100 ],
+                             frame_range = None, 
                              ocut = False, vcut = False, wcut = False):
         
         for i in range(len(val_name)):
             self.group.calculate_stats(val_name[i], val_range[i], val_symm[i],
-                        frame_range = frame_range, nbins = nbins,
+                        frame_range = frame_range, nbins = val_bins[i],
                         ocut = ocut, vcut = vcut, wcut = wcut )

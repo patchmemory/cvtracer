@@ -55,7 +55,7 @@ class Individual:
             self.df.drop(columns=['theta'])
 
     def calculate_dwall(self,tank_radius):
-        self.df['dw'] = self.df.apply(lambda row: tank_radius - 
+        self.df['dwall'] = self.df.apply(lambda row: tank_radius - 
                            ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
 
     def calculate_velocity(self,fps):
@@ -113,11 +113,14 @@ class Individual:
         if math.isclose(mean_dt,expected_dt,rel_tol=0.01/fps):
             factor = expected_dt / mean_dt 
             self.df.t *= factor
+            
+    def set_distance_nn(self, d_nn):
+        self.df['d_nn'] = d_nn.tolist()
     
     # cut_omega(...) generates list of frames to be cut based on their angular speed
-    def cut_omega(self, omega_range = [ -40., 40. ], n_buffer_frames = 2):
+    def cut_omega(self, fps = 30, omega_range = [ -40., 40. ], n_buffer_frames = 2):
         if 'omega' not in self.df.columns:
-            self.calculate_angular_velocity()
+            self.calculate_angular_velocity(fps)
     
         self.df['wcut'] = self.df[['omega']].apply(lambda row: 
                     (row[0] < omega_range[0] or row[0] > omega_range[1]), axis=1)
@@ -127,9 +130,9 @@ class Individual:
                         | self.df.wcut.shift( j_frame) )
 
     # cut_speed(...) generates list of frames to be cut based on their speed
-    def cut_speed(self, speed_range = [ 1., 100. ], n_buffer_frames = 2 ):
+    def cut_speed(self, fps = 30, speed_range = [ 1., 100. ], n_buffer_frames = 2 ):
         if 'speed' not in self.df.columns:
-            self.calculate_velocity()
+            self.calculate_velocity(fps)
 
         self.df['vcut'] = self.df[['speed']].apply(lambda row: 
                     (row[0] < speed_range[0] or row[0] > speed_range[1]), axis=1)
@@ -141,12 +144,12 @@ class Individual:
     # cut_occlusion(...) generates a list of frames to be cut for being too 
     # close (occluded fish are set with same position, so d_ij = 0)
     def cut_occlusion(self, d_min = 0, n_buffer_frames = 2, d_nn = None):
-        if d_nn != None:
-            self.add_distance_nn(d_nn)
-            
-        elif 'd_nn' not in self.df.columns:
-            print("  Nearest neighbor distance not available, and cannot be calculated by an Individual. Please first calculate and store neighbor distances")
-            return 
+        try:
+            if d_nn == None and 'd_nn' not in self.df.columns:
+                print("  Nearest neighbor distance not available, and cannot be calculated by an Individual. Please first calculate and store neighbor distances")
+                return
+        except:
+            self.set_distance_nn(d_nn)
             
         self.df['ocut'] = np.logical_not(self.df['d_nn'] > d_min)
 
@@ -162,8 +165,8 @@ class Individual:
     def valid_frame_fraction(self, frame_range = None, cut_name = 'cut'):
         framei = frame_range[0]
         framef = frame_range[1]
-        n_cut = 1.*sum(self.df[cut_name][framei:framef])
-        n_tot = 1.*len(self.df[cut_name][framei:framef])
+        n_cut = 1.*sum(self.df[cut_name].values[framei:framef])
+        n_tot = 1.*len(self.df[cut_name].values[framei:framef])
         return 1. - n_cut / n_tot
 
 
@@ -205,7 +208,8 @@ class Individual:
             wcut_arr = self.df['wcut']
             self.cut_arr = self.cut_arr | wcut_arr
 
-            
+    def cut_all(self):
+        self.df['cut'] = self.df['ocut'] | self.df['vcut'] | self.df['wcut']
 
     # calculate_stats(...) takes the name of a value and calculates its 
     # statistics across valid frames. User can specify a range of values and a 
@@ -224,9 +228,8 @@ class Individual:
             self.cut_array(arr, ocut, vcut, wcut)
             arr = arr[np.logical_not(self.cut_arr)]
             if frame_range == None:
-                frame_range[0] = 0
-                frame_range[1] = len(arr)
-                
+                frame_range = [0, len(arr)]
+
             arr = arr[frame_range[0]:frame_range[1]]
             if val_range != None:
                 if val_range[0] != None:
@@ -237,15 +240,15 @@ class Individual:
             if val_symm: 
                 arr = np.concatenate((arr,-arr))
       
-        mean = np.mean(arr)
-        stdd = np.std(arr)
-        kurt = spstats.kurtosis(arr,fisher=False)
-        hist = np.histogram(arr, bins=nbins, range=val_range, density=True)
-        
-        self.store_result(mean, val_name, 'mean')
-        self.store_result(stdd, val_name, 'stdd') 
-        self.store_result(kurt, val_name, 'kurt')
-        self.store_result(hist, val_name, 'hist')
+            mean = np.mean(arr)
+            stdd = np.std(arr)
+            kurt = spstats.kurtosis(arr,fisher=False)
+            hist, bins = np.histogram(arr, bins=nbins, range=val_range, density=True)
+            
+            self.store_result(mean, val_name, 'mean')
+            self.store_result(stdd, val_name, 'stdd') 
+            self.store_result(kurt, val_name, 'kurt')
+            self.store_result(hist, val_name, 'hist')
 
 
     def result_key(self, val_name, stat_name, tag = None):
