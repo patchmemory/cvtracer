@@ -157,6 +157,10 @@ class Trial:
     def get_individual_result(self, i_fish, val_name, stat_name, tag = None):
         return self.group.fish[i_fish].get_result(val_name, stat_name, tag)
     
+    def clear_results(self, tag = None):
+        self.group.clear_results(tag)
+        for i in range(self.n):
+            self.group.fish.clear_results(tag)
     
     def convert_pixels_to_cm(self):
         sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
@@ -197,14 +201,17 @@ class Trial:
     
     def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
                       ocut = None, vcut = None, wcut = None ):
-        
+        tag = []
         if ocut != None:
             self.group.cut_occlusion(ocut, n_buffer_frames)
+            tag.append("o%03.1f" % ocut)
         if vcut != None:
             self.group.cut_speed(self.fps, vcut, n_buffer_frames)
+            tag.append("v%05.1fto%05.1f" % (vcut[0],vcut[1]))
         if wcut != None:
             self.group.cut_omega(self.fps, wcut, n_buffer_frames)
-        
+            tag.append("w%05.1fto%05.1f" % (wcut[0],wcut[1]))
+        tag = '_'.join(tag)
         self.group.cut_combine()
         
         if frame_range == None:
@@ -212,6 +219,10 @@ class Trial:
             
         mean, err = self.group.cut_stats(frame_range[0], frame_range[1])
         self.cuts_stats = { 'mean': mean, 'err': err }
+        
+        self.plot_valid(frame_range = frame_range, tag = tag)
+        
+        return tag
 
 
     def calculate_statistics(self, 
@@ -225,14 +236,20 @@ class Trial:
         for i in range(len(val_name)):
             self.group.calculate_stats(val_name[i], val_range[i], val_symm[i],
                         frame_range = frame_range, nbins = val_bins[i],
-                        ocut = ocut, vcut = vcut, wcut = wcut )
+                        ocut = ocut, vcut = vcut, wcut = wcut, tag = tag )
             self.plot_hist(val_name[i], tag)
             self.plot_hist_each(val_name[i], tag)
             
     def plot_hist(self, val_name, tag = None, save = True):
         h = self.get_group_result(val_name, 'hist', tag)
-        plt.fill_between(h[:,0], h[:,1] - h[:,2], h[:,1] + h[:,2], color = 'blue')
-        plt.plot(h[:,0], h[:,1], color='red', linewidth=0.5 )
+        plt.fill_between(h[:,0], h[:,1] - h[:,2], h[:,1] + h[:,2], color = 'blue', label='cross-fish error')
+        plt.plot(h[:,0], h[:,1], color='red', linewidth=0.5, label='cross-fish mean')
+        mean = self.get_group_result(val_name, 'mean', tag)
+        plt.axvline(x = mean[0], color = 'green', linewidth = 3, linestyle = '-', label = 'distribution mean')
+        plt.axvline(x = mean[0] - mean[1], color = 'green', linewidth = 1, linestyle = '--', label = 'distribution error')
+        plt.axvline(x = mean[0] + mean[1], color = 'green', linewidth = 1, linestyle = '--')
+        plt.legend()
+        plt.tight_layout()
         if save:
             fig_name = "%s/%s_hist_%s.png" % (self.fdir, val_name, tag)
             plt.savefig(fig_name)
@@ -242,14 +259,51 @@ class Trial:
         
     def plot_hist_each(self, val_name, tag = None, save = True):
         hist = self.get_individual_results(val_name, 'hist', tag)
+        color_set = plt.rcParams['axes.prop_cycle'].by_key()['color']
         i = 0
         for h in hist: 
+            mean = self.get_individual_result(i, val_name, 'mean', tag)
             i += 1
-            plt.plot(h[:,0], h[:,1], linewidth=1, label=i)
+            c = color_set[i%len(color_set)]
+            plt.axvline(x = mean, color = c, linewidth = 1)
+            plt.plot(h[:,0], h[:,1], color = c, linewidth = 1, label=i)
+        plt.xlabel(val_name)
+        plt.ylabel("normalized count")
         plt.legend()
         plt.tight_layout()
         if save:
             fig_name = "%s/%s_hist_each_%s.png" % (self.fdir, val_name, tag)
+            plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()
+        
+    def plot_valid(self, frame_range = None, tag = None, save = True):
+        cuts = [ 'ocut', 'vcut', 'wcut', 'cut']
+        valid = {}
+        for cut in cuts:
+            valid[cut] = self.group.valid_frame_fraction(frame_range, cut_name = cut)
+        index = np.arange(len(cuts))
+        for i in range(self.n):
+            valid[i] = []
+            for cut in cuts:
+                valid[i].append(valid[cut][i])
+            valid[i] = np.array(valid[i])
+   
+        gutter = 0.1    
+        bar_width = ( 1 - gutter ) / self.n
+        opacity = 0.8
+        for i in range(self.n):
+            plt.bar(index + i*bar_width + 0.5*gutter, valid[i], bar_width, alpha = opacity, label=i)
+
+        plt.xlabel('fraction valid after cuts')
+        plt.xlabel('cut')
+        plt.xticks(index + 0.5 - 0.5*gutter, cuts)
+        plt.ylim([0,1])
+        plt.legend()
+        plt.tight_layout()        
+        if save:
+            fig_name = "%s/valid_%s.png" % (self.fdir, tag)
             plt.savefig(fig_name)
         else:
             plt.show()

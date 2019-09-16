@@ -1,0 +1,748 @@
+nohup: ignoring input
+111
+data/20190213_SF_n1_t2_2000
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik converted according to tank size and location
+       as specified in data/20190213_SF_n1_t2_2000/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190213_SF_n1_t2_2000/trial.pik 
+103
+data/20190320_SF_n2_t2_4531
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik converted according to tank size and location
+       as specified in data/20190320_SF_n2_t2_4531/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+    ... for fish 1, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190320_SF_n2_t2_4531/trial.pik 
+94
+data/20190503_SF_n1_t1_3001
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik converted according to tank size and location
+       as specified in data/20190503_SF_n1_t1_3001/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190503_SF_n1_t1_3001/trial.pik 
+88
+data/20190504_SF_n1_t1_3425
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik converted according to tank size and location
+       as specified in data/20190504_SF_n1_t1_3425/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190504_SF_n1_t1_3425/trial.pik 
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:3257: RuntimeWarning: Mean of empty slice.
+  out=out, **kwargs)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:161: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:217: RuntimeWarning: Degrees of freedom <= 0 for slice
+  keepdims=keepdims)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:186: RuntimeWarning: invalid value encountered in true_divide
+  arrmean, rcount, out=arrmean, casting='unsafe', subok=False)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:209: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/lib/histograms.py:898: RuntimeWarning: invalid value encountered in true_divide
+  return n/db/n.sum(), bin_edges
+/disk1/astyanax-mexicanus/cv-tracer/Analysis/Math.py:24: RuntimeWarning: Mean of empty slice
+  mean_tmp = np.nanmean(l)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/lib/nanfunctions.py:1666: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  keepdims=keepdims)
+/disk1/astyanax-mexicanus/cv-tracer/Analysis/Math.py:43: RuntimeWarning: Mean of empty slice
+  bin_mean = np.nanmean(l[valid,i,1])
+82
+data/20190506_Pa_n1_t2_3112
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik converted according to tank size and location
+       as specified in data/20190506_Pa_n1_t2_3112/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190506_Pa_n1_t2_3112/trial.pik 
+76
+data/20190508_Pa_n10_t1_3057
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik converted according to tank size and location
+       as specified in data/20190508_Pa_n10_t1_3057/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190508_Pa_n10_t1_3057/trial.pik 
+47
+data/20190531_SF_n1_t1_3128
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik converted according to tank size and location
+       as specified in data/20190531_SF_n1_t1_3128/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n1_t1_3128/trial.pik 
+45
+data/20190531_SF_n2_t1_3930
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik converted according to tank size and location
+       as specified in data/20190531_SF_n2_t1_3930/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+    ... for fish 1, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190531_SF_n2_t1_3930/trial.pik 
+37
+data/20190607_Pa_n1_t2_3138
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik converted according to tank size and location
+       as specified in data/20190607_Pa_n1_t2_3138/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190607_Pa_n1_t2_3138/trial.pik 
+33
+data/20190612_SF_n1_t1_3055
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik converted according to tank size and location
+       as specified in data/20190612_SF_n1_t1_3055/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t1_3055/trial.pik 
+31
+data/20190612_SF_n1_t3_3304
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik converted according to tank size and location
+       as specified in data/20190612_SF_n1_t3_3304/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190612_SF_n1_t3_3304/trial.pik 
+28
+data/20190620_SF_n1_t2_5200
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik converted according to tank size and location
+       as specified in data/20190620_SF_n1_t2_5200/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+
+
+  No occlusion cuts to make for single fish.
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190620_SF_n1_t2_5200/trial.pik 
+21
+data/20190710_Pa_n10_t1_3048
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+
+       Converting pixels to (x,y) space in (cm,cm).
+
+       /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik converted according to tank size and location
+       as specified in data/20190710_Pa_n10_t1_3048/tank.pik
+       Calculating kinematics...
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+
+       ... kinematics calculated for Trial and saved in
+             /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+  Directory organized properly.
+
+        Trial object loaded from /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+
+       Calculating neighbor distance and alignment across group... 
+
+       ... done 
+
+
+  Generating occlusion cut using min d_nn = 0.00 cm with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+
+  Generating speed cut using range [1.00, 100.00] cm/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+
+  Generating angular speed cut using range [-40.00, 40.00] rad/s with 2 buffer frames
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+
+  Combining all cuts.... 
+    ... for fish 0, 
+    ... for fish 1, 
+    ... for fish 2, 
+    ... for fish 3, 
+    ... for fish 4, 
+    ... for fish 5, 
+    ... for fish 6, 
+    ... for fish 7, 
+    ... for fish 8, 
+    ... for fish 9, 
+
+        Trial object saved as /disk1/astyanax-mexicanus/data/20190710_Pa_n10_t1_3048/trial.pik 
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:3257: RuntimeWarning: Mean of empty slice.
+  out=out, **kwargs)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:161: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:217: RuntimeWarning: Degrees of freedom <= 0 for slice
+  keepdims=keepdims)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:186: RuntimeWarning: invalid value encountered in true_divide
+  arrmean, rcount, out=arrmean, casting='unsafe', subok=False)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/core/_methods.py:209: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/lib/histograms.py:898: RuntimeWarning: invalid value encountered in true_divide
+  return n/db/n.sum(), bin_edges
+/disk1/astyanax-mexicanus/cv-tracer/Analysis/Math.py:24: RuntimeWarning: Mean of empty slice
+  mean_tmp = np.nanmean(l)
+/home/apatch/.local/lib/python3.6/site-packages/numpy/lib/nanfunctions.py:1666: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  keepdims=keepdims)
+/disk1/astyanax-mexicanus/cv-tracer/Analysis/Math.py:43: RuntimeWarning: Mean of empty slice
+  bin_mean = np.nanmean(l[valid,i,1])
+0
+none left

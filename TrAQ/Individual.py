@@ -163,8 +163,12 @@ class Individual:
 
 
     def valid_frame_fraction(self, frame_range = None, cut_name = 'cut'):
-        framei = frame_range[0]
-        framef = frame_range[1]
+        if frame_range == None:
+            framei = 0
+            framef = self.n_frames()
+        else:
+            framei = frame_range[0]
+            framef = frame_range[1]
         n_cut = 1.*sum(self.df[cut_name].values[framei:framef])
         n_tot = 1.*len(self.df[cut_name].values[framei:framef])
         return 1. - n_cut / n_tot
@@ -231,6 +235,7 @@ class Individual:
                 frame_range = [0, len(arr)]
 
             arr = arr[frame_range[0]:frame_range[1]]
+            arr = arr[~np.isnan(arr)]
             if val_range != None:
                 if val_range[0] != None:
                     arr = arr[arr >= val_range[0]]
@@ -265,4 +270,11 @@ class Individual:
     
     def store_result(self, result, val_name, stat_name, tag = None):
         k = self.result_key(val_name, stat_name, tag)
+        #print("Storing result with key... %s" % k)
         self.result[k] = result
+        
+    def clear_results(self, tag = None):
+        for key in self.result:
+            tag_tmp = '_'.join(key.split('_')[2:])
+            if tag == tag_tmp:
+                del self.result[key]

@@ -106,6 +106,14 @@ class Group:
         for i_fish in range(self.n_fish()):
             self.fish[i_fish].t_stamp_reformat(fps)
 
+
+    def valid_frame_fraction(self, frame_range = None, cut_name = 'cut'):
+        valid = []
+        for i_fish in range(self.n_fish()):    
+            valid.append(self.fish[i_fish].valid_frame_fraction(frame_range, cut_name))
+        return np.array(valid)
+    
+    
     # cut_occlusion(...) generates a list of frames to be cut for being too close 
     # (occluded fish are set with same position, so d_ij = 0)
     def cut_occlusion(self, d_min = 0, n_buffer_frames = 2):
@@ -286,7 +294,7 @@ class Group:
         for i_fish in range(self.n_fish()):
             self.fish[i_fish].calculate_stats( val_name, val_range, val_symm,
                                                frame_range = frame_range, nbins = nbins,
-                                               ocut = ocut, vcut = vcut, wcut = wcut)
+                                               ocut = ocut, vcut = vcut, wcut = wcut, tag = tag)
             for key in stat_keys:
                 stat_list[key].append(self.fish[i_fish].get_result(val_name,key,tag))
     

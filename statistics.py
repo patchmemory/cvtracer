@@ -26,23 +26,23 @@ trial = Trial(args.raw_video)
 ti = 10 * 60 # min to sec
 tf = 30 * 60 # min to sec
 frame_range = [ int(ti * trial.fps), int(tf * trial.fps)]
-ocut = 1
+ocut = 0
 vcut = [1, 100]
 wcut = [-40, 40]
 
-trial.group.clear_results()
+#trial.group.clear_results()
 
 trial.calculate_pairwise()
 
-trial.evaluate_cuts(frame_range = frame_range, n_buffer_frames = 2, 
-                    ocut = ocut, vcut = vcut, wcut = wcut)
+cut_tag = trial.evaluate_cuts(frame_range = frame_range, n_buffer_frames = 2, 
+                              ocut = ocut, vcut = vcut, wcut = wcut)
 
 r_dwall = [0, trial.tank.r_cm ]
 trial.calculate_statistics( val_name  = [ 'dwall', 'speed', 'omega' ], 
                             val_range = [ r_dwall,   vcut,     wcut ], 
                             val_symm  = [   False,   False,    True ],
-                            val_bins  = [     100,     100,     100 ],
+                            val_bins  = [     100,     100,     160 ],
                             frame_range = frame_range, 
-                            ocut = True, vcut = True, wcut = True)
+                            ocut = True, vcut = True, wcut = True, tag = cut_tag)
 
 trial.save()
