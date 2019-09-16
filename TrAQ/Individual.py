@@ -218,7 +218,7 @@ class Individual:
     # angular speed statistics.
     def calculate_stats(self, val_name, val_range = None, val_symm = False,
                         frame_range = None, nbins = 100,
-                        ocut = False, vcut = False, wcut = False):
+                        ocut = False, vcut = False, wcut = False, tag = None):
 
         if val_name not in self.df.columns:
             print("\n  %s not found in DataFrame. Skipping statistics...\n" % val_name)
@@ -243,12 +243,17 @@ class Individual:
             mean = np.mean(arr)
             stdd = np.std(arr)
             kurt = spstats.kurtosis(arr,fisher=False)
-            hist, bins = np.histogram(arr, bins=nbins, range=val_range, density=True)
+            h, bin_edges = np.histogram(arr, bins=nbins, range=val_range, density=True)
+            binc = ( bin_edges[1:] + bin_edges[:-1] ) / 2.
+            hist = []
+            for i in range(len(binc)):
+                hist.append([binc[i], h[i]])
+            hist = np.array(hist)
             
-            self.store_result(mean, val_name, 'mean')
-            self.store_result(stdd, val_name, 'stdd') 
-            self.store_result(kurt, val_name, 'kurt')
-            self.store_result(hist, val_name, 'hist')
+            self.store_result(mean, val_name, 'mean', tag)
+            self.store_result(stdd, val_name, 'stdd', tag) 
+            self.store_result(kurt, val_name, 'kurt', tag)
+            self.store_result(hist, val_name, 'hist', tag)
 
 
     def result_key(self, val_name, stat_name, tag = None):

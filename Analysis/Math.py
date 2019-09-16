@@ -35,14 +35,18 @@ def mean_and_err_hist(l, nbins):
             print("  Found n = %i but expected n = %i." % (len(l[i]), nbins))
             valid[i] = False
         
-    hist_mean = np.zeros((nbins,2),dtype=float)
-    for i in range(len(l)):
-        bin_mean = np.nanmean(l[valid,i])
-        bin_err  = np.nanstd(l[valid,i]) / \
-                        np.sqrt(sum(~np.isnan(l[valid,i])))
-                        
-        hist_mean[i][0] = bin_mean
-        hist_mean[i][1] = bin_err
+    # note: l should be an array containing a sets of bins l[i], and
+    # each bin l[i][j] containing a bin center l[i][j][0], 
+    #                     and normalized count l[i][j][1]
+    hist_mean = np.zeros((nbins, 3),dtype=float)
+    for i in range(len(l[0])):
+        bin_mean = np.nanmean(l[valid,i,1])
+        bin_err  = np.nanstd(l[valid,i,1]) / \
+                        np.sqrt(sum(~np.isnan(l[valid,i,1])))
+                      
+        hist_mean[i][0] = l[0][i][0]
+        hist_mean[i][1] = bin_mean
+        hist_mean[i][2] = bin_err
         
     return np.array(hist_mean)
 

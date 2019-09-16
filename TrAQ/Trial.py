@@ -1,14 +1,15 @@
 import os
 import sys
-import numpy as np
 import pickle
+import numpy as np
+import matplotlib.pyplot as plt
 from TrAQ.Group import Group
 from TrAQ.Tank import Tank
 
 
 class Trial:
     
-    def __init__(self, fvideo, n = None, t = None, date = None, 
+    def __init__(self, fvideo, n = 0, t = None, date = None, 
                  fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
 
         self.result = {}
@@ -147,15 +148,15 @@ class Trial:
     def get_group_result(self, val_name, stat_name, tag = None):
         return self.group.get_result(val_name, stat_name, tag)
     
+    def get_individual_results(self, val_name, stat_name, tag = None):
+        results = []
+        for i in range(self.n):
+            results.append(self.get_individual_result(i, val_name, stat_name, tag))
+        return np.array(results)
+        
     def get_individual_result(self, i_fish, val_name, stat_name, tag = None):
         return self.group.fish[i_fish].get_result(val_name, stat_name, tag)
     
-    def get_individual_results(self, i_fish, val_name, stat_name, result, tag = None):
-        results = []
-        for i in range(self.n):
-            results.append(self.group.fish[i_fish].get_result(val_name, stat_name, tag))
-        return np.array(results)
-        
     
     def convert_pixels_to_cm(self):
         sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
@@ -188,7 +189,11 @@ class Trial:
         sys.stdout.flush()
 
     def calculate_pairwise(self):
+        sys.stdout.write("\n")
+        sys.stdout.write("       Calculating neighbor distance and alignment across group... \n")
         self.group.calculate_distance_alignment()
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
     
     def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
                       ocut = None, vcut = None, wcut = None ):
@@ -205,7 +210,7 @@ class Trial:
         if frame_range == None:
             frame_range = [ int(self.frame_start), int(self.frame_end) ]
             
-        mean, err = self.group.cut_stats(frame_range[0],frame_range[1])
+        mean, err = self.group.cut_stats(frame_range[0], frame_range[1])
         self.cuts_stats = { 'mean': mean, 'err': err }
 
 
@@ -215,9 +220,37 @@ class Trial:
                              val_symm  = [   False,   False,    True ],
                              val_bins  = [     100,     100,     100 ],
                              frame_range = None, 
-                             ocut = False, vcut = False, wcut = False):
+                             ocut = False, vcut = False, wcut = False, tag = None):
         
         for i in range(len(val_name)):
             self.group.calculate_stats(val_name[i], val_range[i], val_symm[i],
                         frame_range = frame_range, nbins = val_bins[i],
                         ocut = ocut, vcut = vcut, wcut = wcut )
+            self.plot_hist(val_name[i], tag)
+            self.plot_hist_each(val_name[i], tag)
+            
+    def plot_hist(self, val_name, tag = None, save = True):
+        h = self.get_group_result(val_name, 'hist', tag)
+        plt.fill_between(h[:,0], h[:,1] - h[:,2], h[:,1] + h[:,2], color = 'blue')
+        plt.plot(h[:,0], h[:,1], color='red', linewidth=0.5 )
+        if save:
+            fig_name = "%s/%s_hist_%s.png" % (self.fdir, val_name, tag)
+            plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()
+        
+    def plot_hist_each(self, val_name, tag = None, save = True):
+        hist = self.get_individual_results(val_name, 'hist', tag)
+        i = 0
+        for h in hist: 
+            i += 1
+            plt.plot(h[:,0], h[:,1], linewidth=1, label=i)
+        plt.legend()
+        plt.tight_layout()
+        if save:
+            fig_name = "%s/%s_hist_each_%s.png" % (self.fdir, val_name, tag)
+            plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()

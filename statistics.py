@@ -30,6 +30,8 @@ ocut = 1
 vcut = [1, 100]
 wcut = [-40, 40]
 
+trial.group.clear_results()
+
 trial.calculate_pairwise()
 
 trial.evaluate_cuts(frame_range = frame_range, n_buffer_frames = 2, 

@@ -56,12 +56,19 @@ class Group:
         key = self.result_key(val_name, stat_name, tag)
         return self.result[key]
 
+    def clear_results(self, tag = None):
+        for key in self.result:
+            tag_tmp = '_'.join(key.split('_')[2:])
+            if tag == tag_tmp:
+                del self.result[key]
+
     def print_result(self,key):
         print(key,self.result[key])
 
     def print_results(self):
         for key in self.result:
             self.print_result(key)
+
 
     def calculate_dwall(self,tank_radius):
         for i_fish in range(self.n_fish()):
@@ -269,7 +276,7 @@ class Group:
     # for use with angular speed statistics.
     def calculate_stats(self, val_name, val_range = None, val_symm = False,
                         frame_range = None, nbins = 100,
-                        ocut = False, vcut = False, wcut = False ):
+                        ocut = False, vcut = False, wcut = False, tag = None ):
         
         stat_keys = [ "mean", "stdd", "kurt", "hist" ]
         stat_list = {}
@@ -281,12 +288,12 @@ class Group:
                                                frame_range = frame_range, nbins = nbins,
                                                ocut = ocut, vcut = vcut, wcut = wcut)
             for key in stat_keys:
-                stat_list[key].append(self.fish[i_fish].get_result(val_name,key))
+                stat_list[key].append(self.fish[i_fish].get_result(val_name,key,tag))
     
         for key in stat_keys:
             if key == 'hist':
                 stat_result = ana_math.mean_and_err_hist(stat_list[key], nbins)
             else:
                 stat_result = ana_math.mean_and_err(stat_list[key])
-            self.store_result(val_name, key, stat_result)
+            self.store_result(stat_result, val_name, key, tag)
             
