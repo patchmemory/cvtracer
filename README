@@ -169,3 +169,23 @@
       by making cuts at the stage of Analysis, in order to consistently treat
       systematic errors across runs. 
 
+
+  ############
+  Dependencies
+  ############
+
+    The following python libraries are required for full functionality of
+    cv-tracer: 
+
+      - argparse
+      - copy
+      - matplotlib
+      - numpy
+      - opencv (cv2, which version?)
+      - pickle
+      - PyQt5
+      - pyqtgraph
+      - scikit-learn
+      - scipy
+
+

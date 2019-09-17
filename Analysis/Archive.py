@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import copy
 import numpy as np
 from TrAQ.Trial import Trial
 import Analysis.Math as ana_math
@@ -17,7 +18,10 @@ class Archive:
     
     def trial_list(self, t, n):
         return self.trials[self.trial_key(t,n)]
-        
+
+    def append_trial_list(self, trial):
+        self.trials[self.trial_key(trial.group.t,trial.group.n)].append(trial)
+
     def load_trial_set(self, trial_list, ns, ts, fps = 30, t0 = 10, tf = 30):
         self.ns     = np.array(ns)
         self.ts     = np.array(ts)
@@ -35,22 +39,19 @@ class Archive:
             fraw = fpath + "/raw.mp4"
             _trial = Trial(fraw)
             if np.isin(_trial.group.n, ns) and np.isin(_trial.group.t, ts):
-                self.trial_list(t,n).append(_trial)
+                self.append_trial_list(copy.deepcopy(_trial))
 
 
     def print_trial_list(self, t, n):
-        for trial in self.trials[self.trial_key(t, n)]:            
-            print("\n  %s, %2i %s" % ( trial.date, t, n ) )
-            print("     video: %s" % ( trial.video ) )
-            print("      data: %s" % ( trial.data ) )
-            if trial.issue:
-                print("       Known issues: " )
-                print("           %s\n" % trial.issue )
+        for _trial in self.trials[self.trial_key(t, n)]:            
+            _trial.print_info()
 
     def print_sorted(self):
+        print("\n\n\n    Listing all trials by type and size... \n")
         for t in self.ts:
             for n in self.ns:
                 self.print_trial_list(t, n)
+            print("\n")
 
 
 
@@ -98,36 +99,3 @@ class Archive:
 #            self.get_result(t, n, val_name, key, tag = None) = stat_result
 # 
 #
-#    def trial_speed_cut(self,i_file,speed_cut=1.,n_buffer_frames=2):
-#        self.d['group'][i_file].speed_cut(speed_cut,n_buffer_frames)
-#
-#
-#    def summarize_valid_frames(self,t, n):
-#        keys = ['vcut', 'ocut', 'both']
-#        frac_valid = {}
-#        mean       = {}
-#        err        = {}
-#        for key in keys:
-#            frac_valid[key] = []
-#            mean[key] = [] 
-#            err[key]  = []
-#
-#        for i_file in range(len(self.d['file'])):
-#            if self.d['n'][i_file] == n and self.d['type'][i_file] == t:
-#                print("\n\n  Determining valid portion of frames...")
-#                print(self.d['file'][i_file])
-#                frac_both, frac_both_err, \
-#                frac_vcut, frac_vcut_err, \
-#                frac_ocut, frac_ocut_err = self.d['group'][i_file].frac_valid(self.framei,self.framef) 
-#                frac_valid['both'].append(1-frac_both)
-#                frac_valid['vcut'].append(1-frac_vcut)
-#                frac_valid['ocut'].append(1-frac_ocut)
-#
-#        for key in frac_valid:
-#            frac_valid[key] = np.array(frac_valid[key])
-#            mean[key] = np.mean(frac_valid[key])
-#            err[key] = np.std(frac_valid[key])/np.sqrt(len(frac_valid[key]))
-#            val = "frac_valid_%s" % key
-#            self.result[self.result_key(t, n,val)] = [mean[key],err[key]] 
-#
-#        return mean['both'], err['both'], mean['vcut'], err['vcut'], mean['ocut'], err['ocut']

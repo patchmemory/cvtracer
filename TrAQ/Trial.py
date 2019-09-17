@@ -23,13 +23,13 @@ class Trial:
             self.setup(fvideo, n, t, date, fps, tank_radius, t_start, t_end)
     
     def setup(self, fvideo = None, n = 0, t = None, date = None, 
-                    fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
+              fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
         self.fvideo_raw = os.path.abspath(fvideo)
         if self.fvideo_raw.split('/')[-1] != self.fvideo_raw_std:
-            print("  Reorganizing directory")
+            print("        Reorganizing directory...")
             self.reorganize_files()
         else:
-            print("  Directory organized properly.")
+            print("        Directory organized properly.")
             
         self.parse_fname(date)
         if not self.load():
@@ -41,9 +41,7 @@ class Trial:
             self.fps         = fps
             self.frame_start = t_start * fps
             self.frame_end   = t_end   * fps
-            self.date        = date
 
-        self.save()
 
     def parse_fname(self, date = None):
         fname_tmp = self.fvideo_raw.split('/')[:-1]
@@ -60,15 +58,15 @@ class Trial:
             year  = int(fdir[ :4])
             month = int(fdir[4:6])
             day   = int(fdir[6:8])
-        
-        self.date = [ year, month, day ]
+
+        self._date = [ year, month, day ]
         self.fdir = '/'.join(self.fvideo_raw.split('/')[:-1])
     
     def print_info(self):
-        date_str = "%4i %2i %2i" % (self.date[0], self.date[1], self.date[2])
-        print("\n  %s, %2i %s" % ( date_str, self.group.t, self.group.n ) )
-        print("     video: %s" % ( self.fvideo_raw ) )
-        print("     trial: %s" % ( self.fname ) )
+        date_str = "%02i/%02i/%4i" % ( self._date[1], self._date[2], self._date[0] )
+        print("\n  %s, %2i %s" % ( date_str, self.group.n, self.group.t ) )
+        print("       trial: %s" % ( self.fname ) )
+        print("       input: %s" % ( self.fvideo_raw ) )
         if self.issue:
             print("       Known issues: " )
             for key in self.issue:
