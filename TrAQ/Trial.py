@@ -219,7 +219,6 @@ class Trial:
             
         mean, err = self.group.cut_stats(frame_range[0], frame_range[1])
         self.cuts_stats = { 'mean': mean, 'err': err }
-        
         self.plot_valid(frame_range = frame_range, tag = tag)
         
         return tag
@@ -283,6 +282,8 @@ class Trial:
         valid = {}
         for cut in cuts:
             valid[cut] = self.group.valid_frame_fraction(frame_range, cut_name = cut)
+            if np.mean(valid[cut]) < 0.5:
+                trial.issue[cut] = "Less than half of frames are valid after %s." % cut
         index = np.arange(len(cuts))
         for i in range(self.n):
             valid[i] = []
