@@ -52,7 +52,7 @@ class VideoCV:
         self.thresh         = []
 
         # initialize lists for current and previous coordinates
-        self.n_ind          = trial.n
+        self.n_ind          = trial.group.n
         self.coord_now      = []
         self.coord_pre      = []
         self.ind_pre_now    = []
@@ -193,7 +193,7 @@ class VideoCV:
     def detect_contours(self):
         self.threshold_detect()
         # find all contours 
-        self.contours, hierarchy = cv2.findContours( self.thresh, 
+        image, self.contours, hierarchy = cv2.findContours( self.thresh, 
                                                      cv2.RETR_TREE, 
                                                      cv2.CHAIN_APPROX_SIMPLE )
         # test found contours against area constraints
@@ -228,7 +228,7 @@ class VideoCV:
             plt.show()
     
         # calculate thresholds, more info:
-        #   https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html
+        #   
         self.thresh = cv2.adaptiveThreshold( gray, 
                                              160, 
                                              cv2.ADAPTIVE_THRESH_MEAN_C, 

@@ -28,7 +28,7 @@ class Tracer:
         sys.stdout.write("\t                                 adam patch, fau, jupiter 2019\n")
         sys.stdout.write("\t                              github.com/patchmemory/cv-tracer\n")
         sys.stdout.write(" \n\n")
-        sys.stdout.write("\t       Tracing %i fish using video, \n" % self.trial.n)
+        sys.stdout.write("\t       Tracing %i fish using video, \n" % self.trial.group.n)
         sys.stdout.write("\t         %s \n" % (self.trial.fvideo_raw))
         sys.stdout.write(" \n\n")
         sys.stdout.write("\t       Writing output to \n")
@@ -43,7 +43,7 @@ class Tracer:
 
     def draw(self):
         self.videocv.draw_tank(self.trial.tank)
-        if ( len(self.videocv.contour_list) != self.trial.n ):
+        if ( len(self.videocv.contour_list) != self.trial.group.n ):
             self.videocv.draw_contour_repeat()
         self.videocv.draw_points()
         self.videocv.draw_directors()

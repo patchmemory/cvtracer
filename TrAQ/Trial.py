@@ -9,7 +9,7 @@ from TrAQ.Tank import Tank
 
 class Trial:
     
-    def __init__(self, fvideo, n = 0, t = None, date = None, 
+    def __init__(self, fvideo = None, n = 0, t = None, date = None, 
                  fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
 
         self.result = {}
@@ -18,7 +18,12 @@ class Trial:
         self.fname_std = 'trial.pik'
         self.fvideo_raw_std = 'raw.mp4'
         self.fvideo_out_std = 'traced.mp4'
-                    
+    
+        if fvideo != None:
+            self.setup(fvideo, n, t, date, fps, tank_radius, t_start, t_end)
+    
+    def setup(self, fvideo = None, n = 0, t = None, date = None, 
+                    fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
         self.fvideo_raw = os.path.abspath(fvideo)
         if self.fvideo_raw.split('/')[-1] != self.fvideo_raw_std:
             print("  Reorganizing directory")
@@ -29,15 +34,13 @@ class Trial:
         self.parse_fname(date)
         if not self.load():
             sys.stdout.write("\n        Generating new Trial object.\n")
-            self.n           = int(n)
-            self.t           = t
-            self.fps         = fps
             self.tank        = Tank(self.fvideo_raw, tank_radius)
             self.tank.locate()
             self.tank.r_cm   = tank_radius
+            self.group       = Group(int(n), t)        
+            self.fps         = fps
             self.frame_start = t_start * fps
             self.frame_end   = t_end   * fps
-            self.group       = Group(self.n, self.t)        
             self.date        = date
 
         self.save()
@@ -63,7 +66,7 @@ class Trial:
     
     def print_info(self):
         date_str = "%4i %2i %2i" % (self.date[0], self.date[1], self.date[2])
-        print("\n  %s, %2i %s" % ( date_str, self.t, self.n ) )
+        print("\n  %s, %2i %s" % ( date_str, self.group.t, self.group.n ) )
         print("     video: %s" % ( self.fvideo_raw ) )
         print("     trial: %s" % ( self.fname ) )
         if self.issue:
@@ -83,18 +86,27 @@ class Trial:
     def load(self, fname = None):
         if fname != None:
             self.fname = fname
-        try:
-            f = open(self.fname, 'rb')
-            tmp_dict = pickle.load(f)
-            f.close()
-            self.__dict__.update(tmp_dict) 
-            sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
-            sys.stdout.flush()
-            return True
-        except:
-            sys.stdout.write("\n        Unable to load Trial from %s \n" % self.fname)
-            sys.stdout.flush()
-            return False
+        
+        f = open(self.fname, 'rb')
+        tmp_dict = pickle.load(f)
+        f.close()
+        self.__dict__.update(tmp_dict) 
+        sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
+        sys.stdout.flush()
+        return True
+
+#        try:
+#            f = open(self.fname, 'rb')
+#            tmp_dict = pickle.load(f)
+#            f.close()
+#            self.__dict__.update(tmp_dict) 
+#            sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
+#            sys.stdout.flush()
+#            return True
+#        except:
+#            sys.stdout.write("\n        Unable to load Trial from %s \n" % self.fname)
+#            sys.stdout.flush()
+#            return False
 
     def reorganize_files(self):
         vfile = self.fvideo_raw.split('/')[-1]
@@ -150,7 +162,7 @@ class Trial:
     
     def get_individual_results(self, val_name, stat_name, tag = None):
         results = []
-        for i in range(self.n):
+        for i in range(self.group.n):
             results.append(self.get_individual_result(i, val_name, stat_name, tag))
         return np.array(results)
         
@@ -159,7 +171,7 @@ class Trial:
     
     def clear_results(self, tag = None):
         self.group.clear_results(tag)
-        for i in range(self.n):
+        for i in range(self.group.n):
             self.group.fish.clear_results(tag)
     
     def convert_pixels_to_cm(self):
@@ -201,7 +213,9 @@ class Trial:
     
     def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
                       ocut = None, vcut = None, wcut = None ):
-        tag = []
+        
+        tag = [ "t%02ito%02i" % ( int(frame_range[0]/self.fps/60.), 
+                                  int(frame_range[1]/self.fps/60.)  ) ]
         if ocut != None:
             self.group.cut_occlusion(ocut, n_buffer_frames)
             tag.append("o%03.1f" % ocut)
@@ -284,16 +298,16 @@ class Trial:
         for cut in cuts:
             valid[cut] = self.group.valid_frame_fraction(frame_range, cut_name = cut)
         index = np.arange(len(cuts))
-        for i in range(self.n):
+        for i in range(self.group.n):
             valid[i] = []
             for cut in cuts:
                 valid[i].append(valid[cut][i])
             valid[i] = np.array(valid[i])
    
         gutter = 0.1    
-        bar_width = ( 1 - gutter ) / self.n
+        bar_width = ( 1 - gutter ) / self.group.n
         opacity = 0.8
-        for i in range(self.n):
+        for i in range(self.group.n):
             plt.bar(index + i*bar_width + 0.5*gutter, valid[i], bar_width, alpha = opacity, label=i)
 
         plt.xlabel('fraction valid after cuts')

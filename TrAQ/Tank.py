@@ -17,8 +17,7 @@ class Tank:
         self.frame   = None
 
         self.fvideo  = fvideo
-        self.fname = '/'.join(self.fvideo.split('/')[0:-1]) \
-                                                    + "/tank.pik"
+        self.fname = '/'.join(self.fvideo.split('/')[0:-1]) + "/tank.pik"
 
 
     def save(self, fname = None):
