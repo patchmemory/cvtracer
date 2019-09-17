@@ -1,189 +1,67 @@
-##################################################################################
-#
-#  this is a hacked version of tracktor, first composed by Vivekh Sridhar of
-#  the Couzin lab, the base be found here: github.com/vivekhsridhar/tracktor 
-#  
-#  using Sridhar's tracktor as a starting point, i have tuned parameters and
-#  modifed several features adhoc to study collective behavior of adult and
-#  larval astyanax mexicanus ---adam patch, fau jupiter, jan 2019
-#
-##################################################################################
-import sys
-import os
-import numpy as np
-import cv2
-from TrAQ.Trial import Trace, Trial
-from KinematicDataFrame import KinematicDataFrame
+#!/usr/bin/python3
+import argparse
+from TrAQ.Trial import Trial
+from TrAQ.Tracer import Tracer
+from TrAQ.VideoCV import VideoCV
 
-args = Trace.arg_parse()
-
-n_ind       = args.n_individual
-fps         = args.frames_per_second
-tank_R_cm   = args.tank_diameter/2.
-frame_start = int(args.t_start * fps)
-frame_end   = int(args.t_end   * fps)
-block_size  = args.block_size 
-offset      = args.thresh_offset
-gpu_on      = args.gpu_on
-
-home_path = os.path.realpath(args.work_dir)
-input_loc = os.path.realpath(args.raw_video)
-data_output_dir = "data/"
-video_output_dir = "video/"
-output_str = "cv"
-input_vidpath, output_vidpath, output_filepath, output_text, codec = Trace.organize_filenames(
-                                home_path,input_loc,video_output_dir,data_output_dir,output_str)
-
-trial = Trial(input_vidpath)
-
-Trace.print_title(n_ind,input_vidpath,output_vidpath,output_filepath,output_text)
-
-cap = cv2.VideoCapture(input_vidpath)
-if cap.isOpened() == False:
-    sys.exit('Video file cannot be read! Please check input_vidpath to ensure it is correctly pointing to the video file.')
-
-# Video writer class to output video with contour and centroid of tracked
-# object(s) make sure the frame size matches size of array 'final'
-fourcc = cv2.VideoWriter_fourcc(*codec)
-output_framesize = ( int(cap.read()[1].shape[1]*args.view_scale),
-                     int(cap.read()[1].shape[0]*args.view_scale)  )
-
-if ( args.RGB ):
-    color = Trace.colours
-    out = cv2.VideoWriter( filename = output_vidpath, 
-                           fourcc = fourcc, 
-                              fps = fps, 
-                        frameSize = output_framesize, 
-                          isColor = True )
-else:
-    out = cv2.VideoWriter( filename = output_vidpath, 
-                           fourcc = fourcc, 
-                              fps = fps, 
-                        frameSize = output_framesize, 
-                          isColor = False )
-
-if frame_end < 0:
-    frame_end = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+def arg_parse():
+    parser = argparse.ArgumentParser(description="OpenCV2 Fish Tracker")
+    parser.add_argument("raw_video", type=str, help="path to raw video")
+    parser.add_argument("-ts","--t_start", type=float, help="start time, in seconds", default=0)
+    parser.add_argument("-te","--t_end", type=float, help="end time, in seconds", default=-1)
+    parser.add_argument("-npix","--n_pixel_blur", type=float, help="square-root of n-pixels for threshold blurring", default=3)
+    parser.add_argument("-bs","--block_size", type=int, help="contour block size",default=15)
+    parser.add_argument("-th","--thresh_offset", type=int, help="threshold offset for contour-finding",default=13) 
+    parser.add_argument("-amin","--min_area", type=int, help="minimum area for threhold detection", default=20)
+    parser.add_argument("-amax","--max_area", type=int, help="maximum area for threhold detection", default=500)
+    parser.add_argument("-lt","--trail_length", type=int, help="length of trail", default=3)
+    parser.add_argument("-on","--online_viewer", help="view tracking results in real time", action='store_true') 
+    parser.add_argument("-vs","--view_scale", help="to scale size of window for online viewing", default=1.) 
+    parser.add_argument("-RGB", help="generate movie in RGB (default is greyscale)", action='store_true')
+    parser.add_argument("-GPU", help="use UMat file handling for OpenCV Transparent API", action='store_true') 
+    return parser.parse_args()
 
 
-## need to functionally replace this so that maintains 
-## simple calling of last few frames...
-q = [ KinematicDataFrame() for i in range(n_ind) ]
+args = arg_parse()
 
-contour_count = []
-directors = args.directors
+trial       = Trial(args.raw_video)
+frame_start = int(args.t_start * trial.fps)
+frame_end   = int(args.t_end   * trial.fps)
+videocv     = VideoCV(trial, frame_start, frame_end, 
+                      args.n_pixel_blur, args.block_size, args.thresh_offset, 
+                      args.min_area, args.max_area, args.trail_length, 
+                      args.RGB, args.online_viewer, args.view_scale, args.GPU ) 
 
-meas_last = list(np.zeros((n_ind,3)))
-meas_now = list(np.zeros((n_ind,3)))
+tracer = Tracer(trial, videocv)
+tracer.print_title()
+tracer.videocv.set_frame(frame_start)
 
-draw_mask = False
+for i_frame in range(videocv.frame_start, videocv.frame_end + 1):
 
-contour_list = []
-contourID_repeat = []
-contourID_unclaimed = []
-cap.set(cv2.CAP_PROP_POS_FRAMES, frame_start)
+    # load current frame into the tracer video
+    if tracer.videocv.get_frame():
 
-for i_frame in range(frame_start,frame_end+1):
-    frame_count = i_frame - frame_start
-    current_time = i_frame * fps 
-    ret, frame = cap.read()
-    if ret == True:
-
-        if gpu_on:
-            frame = cv2.UMat(frame)
-
-        if int(args.view_scale) != 1:
-            frame = cv2.resize(    frame, None,
-                                   fx = args.view_scale,
-                                   fy = args.view_scale,
-                                   interpolation = cv2.INTER_LINEAR )
-
-        # find contours (note: following parameters have been tuned adhoc)
-        min_area = 20   # min and max area should be changed according to 
-        max_area = 1000 # fish size and the camera resolution
-        n_pix = 5
-
-        contours = Trace.contour_detect(frame,min_area,max_area,block_size,offset,n_pix)
-
-        n_contour = len(contours)
-        contour_count.append(n_contour)
-        meas_last, meas_now = Trace.points_directors_detect(contours, meas_last, meas_now)
-    
-        if n_contour == n_ind:
-            # do a simple reordering based on hugarian min-dist algorithm
-            meas_last, meas_now = Trace.reorder_hungarian(meas_last,meas_now)
-        else:
-            print("  Unexpected contour count, n = %i " % n_contour)
-            if n_contour == 0:
-                meas_last, meas_now = Trace.temporary_guess(q, meas_last, meas_now, frame_count)
-            elif q[0].n_entries() < 3 or n_ind < 3:   # for initial frames, make "educated guesses"
-                meas_now = Trace.kmeans_contours(contours, n_ind, meas_now)
-                meas_last, meas_now = Trace.reorder_hungarian(meas_last,meas_now)
-            else:
-                # if have previous info, do something smarter to connect overlapping
-                # fish that may be in one combined contour
-                ind_last_now, contourID_repeat, contourID_unclaimed = \
-                Trace.contour_connect(q, n_ind, meas_now, meas_last, contours, frame_count)
-                # then reorder according to connections
-                meas_last, meas_now = Trace.reorder_connected(meas_last, meas_now, ind_last_now) 
-    
-
-
-        if args.RGB:
-            final = frame
-            if ( n_contour != n_ind ):
-                final = Trace.contour_draw(final, contours, contourID_repeat, RGB=True)
-            final = Trace.points_draw(final, meas_now, RGB=True)
-            final = Trace.directors_draw(final, meas_last, meas_now, RGB=True)
-            final = Trace.time_frame_label(final,i_frame, RGB=True)
-        else:
-            final = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            
-        if ( n_contour != n_ind ):
-            final = Trace.contour_draw(final, contours, contourID_repeat)
-        final = Trace.points_draw(final, meas_now)
-        final = Trace.directors_draw(final, meas_last, meas_now)
-        final = Trace.time_frame_label(final,i_frame)
-
-        for i in range(len(meas_now)):
-            q[i].add_entry(current_time,meas_now[i][0], meas_now[i][1], meas_now[i][2])
+        # first remove all information from outside of tank
+        tracer.mask_tank()
         
-        trial.group.add_entry(current_time,meas_now)
+        # detect and analyze contours in current frame
+        tracer.videocv.detect_contours()
+        tracer.videocv.analyze_contours()
 
-        if gpu_on:
-            final = cv2.UMat.get(final)
- 
-        out.write(final)
-        if ( args.online_viewer ):
-            cv2.imshow('frame', final) 
-            return_key = 13
-            esc_key    = 27 
-            space_key  = 32
-            if cv2.waitKey(33) == esc_key:
-                break
-            elif cv2.waitKey(33) == space_key:
-                while(True):
-                    k = cv2.waitKey(33)
-                    if k == return_key:
-                        break
-                    elif k == -1:
-                        continue
-          
-    # output time of current frame.
-    Trace.print_current_frame(i_frame,fps)
+        # estimate connection between last frame and current frame
+        tracer.connect_frames()
 
-# release the capture
-cap.release()
-out.release()
-cv2.destroyAllWindows()
-cv2.waitKey(1)
+        # store results from current frame in the trial object
+        tracer.update_trial()
 
-sys.stdout.write("\n")
-sys.stdout.write("       Tracking complete.\n")
-sys.stdout.flush()
+        # write frame with traces to new video file, show if online
+        tracer.draw()
+        tracer.videocv.write_frame()
+        if not tracer.videocv.show_frame():
+            break
 
-trial.save()
+        # print time to terminal
+        tracer.videocv.print_current_frame()
 
-## commented this out since it now should save a Trial object...
-#q = np.array(q)
-#np.save(output_filepath,q)
+tracer.videocv.release()
+tracer.trial.save()
