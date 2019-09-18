@@ -7,41 +7,50 @@ import scipy.stats as spstats
 class Individual:
 
     def __init__(self):
+
         d = {'t': [], 'x': [], 'y': [], 'theta': [] }    
         self.df = pd.DataFrame( data=d, dtype=np.float64 )
         self.result = {}
-        self.val_range = {}
+
 
     def n_frames(self):
         return len(self.df.index)
 
+
     def print(self):
         print(self.df)
+    
     
     def add_entry(self,t,x,y,theta):
         #df_add = pd.DataFrame({'t':[t], 'row':[x],'col':[y],'theta_pix':[theta]})
         df_add = pd.DataFrame({'t':[t], 'x':[x],'y':[y],'theta':[theta]})
         self.df = self.df.append(df_add, ignore_index=True)
 
+
     def print_frame(self,index):
         print(self.df.loc[index])
 
-    def sort_by_time(self):
-        self.df = self.df.sort_values(by='t')
 
     def loc(self,index,val):
         return self.df.loc[index,val]
+
     
     def coordinates(self, index):
         return [ self.loc(index,'x'), 
                  self.loc(index,'y'), 
                  self.loc(index,'theta') ]
 
+
+    def sort_by_time(self):
+        self.df = self.df.sort_values(by='t')
+
+
     def convert_pixels(self, row_c, col_c, L_pix, L_m):
         A_convert = L_m / L_pix
         self.pixel_reformat()
         self.df['x'] =  A_convert*(self.df['row'] - row_c)
         self.df['y'] =  A_convert*(self.df['col'] - col_c)
+
 
     def pixel_reformat(self):
         if 'col' not in self.df.columns:
@@ -54,9 +63,25 @@ class Individual:
             self.df['theta_pix'] = self.df['theta']
             self.df.drop(columns=['theta'])
 
+
+    def tstamp_reformat(self,fps):
+        mean_dt = (self.df.t.shift(-1) - self.df.t.shift(0)).mean()
+        expected_dt = 1./fps
+        if math.isclose(mean_dt,expected_dt,rel_tol=0.01/fps):
+            factor = expected_dt / mean_dt 
+            self.df.t *= factor
+
+
+
+    ##############################
+    # Calculation functions
+    ##############################
+
+
     def calculate_dwall(self,tank_radius):
         self.df['dwall'] = self.df.apply(lambda row: tank_radius - 
                            ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
+
 
     def calculate_velocity(self,fps):
         if 'vx' not in self.df.columns or 'vy' not in self.df.columns:
@@ -64,6 +89,7 @@ class Individual:
             self.df['vy'] = ( self.df.y.shift(-1) - self.df.y.shift(1) ) / 2 * fps
         if 'speed' not in self.df.columns:
             self.df['speed'] = np.sqrt(pow(self.df.vx,2) + pow(self.df.vy,2)) 
+
 
     def calculate_director(self,fps,theta_replace=False):
         if 'vx' not in self.df.columns or 'vy' not in self.df.columns:
@@ -78,12 +104,11 @@ class Individual:
             self.df['theta_pix'] = self.df.theta
             self.df['etheta'] = np.arctan2(self.df.ey,self.df.ex)
 
+
     def calculate_acceleration(self,fps):
         self.df['ax'] = ( self.df.vx.shift(-1) - self.df.vx.shift(1) ) / 2 * fps
         self.df['ay'] = ( self.df.vy.shift(-1) - self.df.vy.shift(1) ) / 2 * fps
 
-    def angle_diff(self,q2,q1):
-        return min(q2-q1,q2-q1,q2-q1+2*np.pi,q2-q1-2*np.pi, key=abs)
 
     def calculate_angular_velocity(self,fps):
         self.df['omega1'] = self.df.theta.shift(-1) - self.df.theta.shift(1) 
@@ -93,6 +118,7 @@ class Individual:
         self.df['omega'] *= (fps/2.)
         self.df.drop(columns=['omega1','omega2','omega3'], inplace=True)
 
+
     def calculate_angular_acceleration(self,fps):
         self.df['alpha1'] = self.df.theta.shift(-1) - self.df.theta.shift(1) 
         self.df['alpha2'] = self.df.theta.shift(-1) - self.df.theta.shift(1) + 2*np.pi 
@@ -101,21 +127,29 @@ class Individual:
         self.df['alpha'] *= (fps/2.)
         self.df.drop(columns=['alpha1','alpha2','alpha3'], inplace=True)
 
+
     def calculate_local_acceleration(self,fps):
         if 'ax' not in self.df.columns or 'ay' not in self.df.columns:
             self.calculate_acceleration()
         self.df['af'] =   np.cos(self.df.etheta)*self.df.ax + np.sin(self.df.etheta)*self.df.ay
         self.df['al'] = - np.sin(self.df.etheta)*self.df.ax + np.cos(self.df.etheta)*self.df.ay
 
-    def tstamp_reformat(self,fps):
-        mean_dt = (self.df.t.shift(-1) - self.df.t.shift(0)).mean()
-        expected_dt = 1./fps
-        if math.isclose(mean_dt,expected_dt,rel_tol=0.01/fps):
-            factor = expected_dt / mean_dt 
-            self.df.t *= factor
-            
+
     def set_distance_nn(self, d_nn):
         self.df['d_nn'] = d_nn.tolist()
+
+
+
+
+    #########################
+    # Cut functions
+    #########################
+    
+
+    # cut_all() can be called after all other cuts have been calculated    
+    def cut_all(self):
+        self.df['cut'] = self.df['ocut'] | self.df['vcut'] | self.df['wcut']
+
     
     # cut_omega(...) generates list of frames to be cut based on their angular speed
     def cut_omega(self, fps = 30, omega_range = [ -40., 40. ], n_buffer_frames = 2):
@@ -129,6 +163,7 @@ class Individual:
                         | self.df.wcut.shift(-j_frame) 
                         | self.df.wcut.shift( j_frame) )
 
+
     # cut_speed(...) generates list of frames to be cut based on their speed
     def cut_speed(self, fps = 30, speed_range = [ 1., 100. ], n_buffer_frames = 2 ):
         if 'speed' not in self.df.columns:
@@ -140,6 +175,7 @@ class Individual:
             self.df['vcut'] = ( self.df['vcut'] 
                         | self.df.vcut.shift(-j_frame) 
                         | self.df.vcut.shift( j_frame) )
+
 
     # cut_occlusion(...) generates a list of frames to be cut for being too 
     # close (occluded fish are set with same position, so d_ij = 0)
@@ -158,6 +194,7 @@ class Individual:
                               | self.df.ocut.shift(-j_frame) 
                               | self.df.ocut.shift( j_frame) )
     
+    
     def cut_occlusion_null(self):
         self.df['ocut'] = False
 
@@ -172,17 +209,6 @@ class Individual:
         n_cut = 1.*sum(self.df[cut_name].values[framei:framef])
         n_tot = 1.*len(self.df[cut_name].values[framei:framef])
         return 1. - n_cut / n_tot
-
-
-    def total_frames_occlusion(self,framei,framef):
-        return float(sum(self.df['ocut'][framei:framef]))/len(self.df['ocut'][framei:framef])
-
-    def total_frames_inactive(self,framei,framef):
-        return float(sum(self.df['vcut'][framei:framef]))/len(self.df['vcut'][framei:framef])
-
-    def total_frames_cut(self,framei,framef):
-        n_cut = sum(self.df['vcut'][framei:framef] | self.df['ocut'][framei:framef])
-        return float(n_cut)/len(self.df['vcut'][framei:framef])
 
     # cut_array(...) generates a mask based on cuts, providing boolean values
     # that represent frames to be cut. User specifies cuts which must be 
@@ -212,8 +238,34 @@ class Individual:
             wcut_arr = self.df['wcut']
             self.cut_arr = self.cut_arr | wcut_arr
 
-    def cut_all(self):
-        self.df['cut'] = self.df['ocut'] | self.df['vcut'] | self.df['wcut']
+
+
+    #########################################
+    # statistics and results functions
+    #########################################
+
+
+    def result_key(self, val_name, stat_name, tag = None):
+        return "%s_%s_%s" % (val_name, stat_name, tag)
+
+
+    def store_result(self, result, val_name, stat_name, tag = None):
+        k = self.result_key(val_name, stat_name, tag)
+        #print("Storing result with key... %s" % k)
+        self.result[k] = result
+
+        
+    def get_result(self, val_name, stat_name, tag = None):
+        k = self.result_key(val_name, stat_name, tag)
+        return self.result[k]
+  
+        
+    def clear_results(self, tag = None):
+        for key in self.result:
+            tag_tmp = '_'.join(key.split('_')[2:])
+            if tag == tag_tmp:
+                del self.result[key]
+
 
     # calculate_stats(...) takes the name of a value and calculates its 
     # statistics across valid frames. User can specify a range of values and a 
@@ -259,22 +311,3 @@ class Individual:
             self.store_result(stdd, val_name, 'stdd', tag) 
             self.store_result(kurt, val_name, 'kurt', tag)
             self.store_result(hist, val_name, 'hist', tag)
-
-
-    def result_key(self, val_name, stat_name, tag = None):
-        return "%s_%s_%s" % (val_name, stat_name, tag)
-        
-    def get_result(self, val_name, stat_name, tag = None):
-        k = self.result_key(val_name, stat_name, tag)
-        return self.result[k]
-    
-    def store_result(self, result, val_name, stat_name, tag = None):
-        k = self.result_key(val_name, stat_name, tag)
-        #print("Storing result with key... %s" % k)
-        self.result[k] = result
-        
-    def clear_results(self, tag = None):
-        for key in self.result:
-            tag_tmp = '_'.join(key.split('_')[2:])
-            if tag == tag_tmp:
-                del self.result[key]

@@ -20,6 +20,19 @@ class Tank:
         self.fname = '/'.join(self.fvideo.split('/')[0:-1]) + "/tank.pik"
 
 
+    def print_info(self):
+        print("")
+        print("        Filenames")
+        print("           Tank: %s" % self.fname)
+        print("          Video: %s" % self.fvideo)
+        print("")
+        print("        Tank information (pixels)")
+        print("            row: %4.2e " % self.row_c )
+        print("            col: %4.2e " % self.col_c )
+        print("              R: %4.2e " % self.r     )
+        print("")
+
+
     def save(self, fname = None):
         if fname != None:
             self.fname = fname
@@ -46,6 +59,7 @@ class Tank:
             sys.stdout.flush()
             return False
 
+
     def load_txt(self, fname_txt = None):
         try:
             f = open(fname_txt,'r')
@@ -56,23 +70,16 @@ class Tank:
             self.col_c = vals[1]
             self.r     = vals[2]
         except:
-            print("    Cannot locate %s!" % fname)
+            print("    Cannot locate %s!" % fname_txt)
             exit()
 
 
-    def print_info(self):
-        print("")
-        print("        Filenames")
-        print("           Tank: %s" % self.fname)
-        print("          Video: %s" % self.fvideo)
-        print("")
-        print("        Tank information (pixels)")
-        print("            row: %4.2e " % self.row_c )
-        print("            col: %4.2e " % self.col_c )
-        print("              R: %4.2e " % self.r     )
-        print("")
 
-
+    #########################
+    # Tank locator GUI
+    #########################
+    
+    
     def add_circle_point(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.add_point(x,y)
@@ -129,19 +136,14 @@ class Tank:
 
 
     def locate(self):
-
-
         frame_start = 0
         frame_end   = 0
-
         if not self.load():
             cap = cv2.VideoCapture(self.fvideo)
             if cap.isOpened() == False:
-                sys.exit("  Video cannot be opened! Ensure proper video file specified.")
-          
+                sys.exit("  Video cannot be opened! Ensure proper video file specified.")         
             if frame_end < 0:
-                frame_end = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-          
+                frame_end = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1          
             while True:
                 # open frame
                 i_frame = int(np.random.uniform(frame_start,frame_end))
@@ -174,3 +176,4 @@ class Tank:
             sys.stdout.flush()
             
             self.save()
+     

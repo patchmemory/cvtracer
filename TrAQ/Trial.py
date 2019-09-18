@@ -136,6 +136,28 @@ class Trial:
     ######################################################
     # some functions for storing and retrieving results
     #####################################################
+
+
+    def get_group_result(self, val_name, stat_name, tag = None):
+        return self.group.get_result(val_name, stat_name, tag)
+
+    
+    def get_individual_results(self, val_name, stat_name, tag = None):
+        results = []
+        for i in range(self.group.n):
+            results.append(self.get_individual_result(i, val_name, stat_name, tag))
+        return np.array(results)
+
+        
+    def get_individual_result(self, i_fish, val_name, stat_name, tag = None):
+        return self.group.fish[i_fish].get_result(val_name, stat_name, tag)
+
+    
+    def clear_results(self, tag = None):
+        self.group.clear_results(tag)
+        for i in range(self.group.n):
+            self.group.fish.clear_results(tag)
+
         
     def summarize_statistics(self, tag = None):
         vals = [ 'dw', 'speed', 'omega' ]
@@ -152,25 +174,13 @@ class Trial:
                 else:
                     print( "    %s \t%4.2e \t%4.2e " % (stat, result[0], result[1]) )
                 print("\n")
-        print("\n")
-        
+        print("\n")      
 
-    def get_group_result(self, val_name, stat_name, tag = None):
-        return self.group.get_result(val_name, stat_name, tag)
-    
-    def get_individual_results(self, val_name, stat_name, tag = None):
-        results = []
-        for i in range(self.group.n):
-            results.append(self.get_individual_result(i, val_name, stat_name, tag))
-        return np.array(results)
-        
-    def get_individual_result(self, i_fish, val_name, stat_name, tag = None):
-        return self.group.fish[i_fish].get_result(val_name, stat_name, tag)
-    
-    def clear_results(self, tag = None):
-        self.group.clear_results(tag)
-        for i in range(self.group.n):
-            self.group.fish.clear_results(tag)
+
+    #################################################
+    # experimental transformation functions
+    #################################################
+
     
     def convert_pixels_to_cm(self):
         sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
@@ -180,34 +190,12 @@ class Trial:
         sys.stdout.write("\n       as specified in %s" % self.tank.fname )
         sys.stdout.flush()
 
-#    def transform_for_lens(self):
-#        sys.stdout.write("\n       Transforming to account for wide-angle lens.\n")
-#        sys.stdout.flush()
-#        self.group.lens_trasnformation(A,B,C)
 
-    def calculate_kinematics(self):           
-        sys.stdout.write("\n       Calculating kinematics...\n")
+    def transform_for_lens(self):
+        sys.stdout.write("\n       Transforming to account for wide-angle lens.\n")
         sys.stdout.flush()
-        self.group.calculate_dwall(self.tank.r_cm)
-        self.group.calculate_velocity(self.fps)
-        self.group.calculate_acceleration(self.fps)
-        self.group.calculate_director(self.fps)
-        self.group.calculate_angular_velocity(self.fps)
-        self.group.calculate_angular_acceleration(self.fps)
-        self.group.calculate_local_acceleration(self.fps)
-    
-        self.save()          
-        sys.stdout.write("\n")
-        sys.stdout.write("       ... kinematics calculated for Trial and saved in\n")
-        sys.stdout.write("             %s \n" % self.fname)
-        sys.stdout.flush()
+        #self.group.lens_transformation(A,B,C)
 
-    def calculate_pairwise(self):
-        sys.stdout.write("\n")
-        sys.stdout.write("       Calculating neighbor distance and alignment across group... \n")
-        self.group.calculate_distance_alignment()
-        sys.stdout.write("\n")
-        sys.stdout.write("       ... done \n")
     
     def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
                       ocut = None, vcut = None, wcut = None ):
@@ -236,6 +224,37 @@ class Trial:
         return tag
 
 
+
+    #################################################
+    # calculation functions
+    #################################################
+
+
+    def calculate_kinematics(self):           
+        sys.stdout.write("\n       Calculating kinematics...\n")
+        sys.stdout.flush()
+        self.group.calculate_dwall(self.tank.r_cm)
+        self.group.calculate_velocity(self.fps)
+        self.group.calculate_acceleration(self.fps)
+        self.group.calculate_director(self.fps)
+        self.group.calculate_angular_velocity(self.fps)
+        self.group.calculate_angular_acceleration(self.fps)
+        self.group.calculate_local_acceleration(self.fps)
+        self.save()          
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... kinematics calculated for Trial and saved in\n")
+        sys.stdout.write("             %s \n" % self.fname)
+        sys.stdout.flush()
+
+
+    def calculate_pairwise(self):
+        sys.stdout.write("\n")
+        sys.stdout.write("       Calculating neighbor distance and alignment across group... \n")
+        self.group.calculate_distance_alignment()
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
+
+
     def calculate_statistics(self, 
                              val_name  = [ 'dwall', 'speed', 'omega' ], 
                              val_range = [    None,    None,    None ], 
@@ -250,7 +269,14 @@ class Trial:
                         ocut = ocut, vcut = vcut, wcut = wcut, tag = tag )
             self.plot_hist(val_name[i], tag)
             self.plot_hist_each(val_name[i], tag)
-            
+        
+    
+    
+    #################################################
+    # plot functions
+    #################################################
+
+
     def plot_hist(self, val_name, tag = None, save = True):
         h = self.get_group_result(val_name, 'hist', tag)
         plt.fill_between(h[:,0], h[:,1] - h[:,2], h[:,1] + h[:,2], color = 'blue', label='cross-fish error')
@@ -267,6 +293,7 @@ class Trial:
         else:
             plt.show()
         plt.clf()
+        
         
     def plot_hist_each(self, val_name, tag = None, save = True):
         hist = self.get_individual_results(val_name, 'hist', tag)
@@ -289,13 +316,14 @@ class Trial:
             plt.show()
         plt.clf()
         
+        
     def plot_valid(self, frame_range = None, tag = None, save = True):
         cuts = [ 'ocut', 'vcut', 'wcut', 'cut']
         valid = {}
         for cut in cuts:
             valid[cut] = self.group.valid_frame_fraction(frame_range, cut_name = cut)
             if np.mean(valid[cut]) < 0.5:
-                trial.issue[cut] = "Less than half of frames are valid after %s." % cut
+                self.issue[cut] = "Less than half of frames are valid after %s." % cut
         index = np.arange(len(cuts))
         for i in range(self.group.n):
             valid[i] = []
@@ -303,7 +331,7 @@ class Trial:
                 valid[i].append(valid[cut][i])
             valid[i] = np.array(valid[i])
    
-        gutter = 0.1    
+        gutter = 0.1
         bar_width = ( 1 - gutter ) / self.group.n
         opacity = 0.8
         for i in range(self.group.n):

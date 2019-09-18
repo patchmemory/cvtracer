@@ -78,6 +78,7 @@ class CVTracer:
                                     (   0, 255,   0),
                                     (   0,   0,   0) ]
 
+
     def random_color_list(self):
         self.colors = []
         low = 0
@@ -123,10 +124,10 @@ class CVTracer:
 
 
 
-
     ############################
     # cv2.VideoCapture functions
     ############################
+
 
     def init_video_capture(self):
         self.cap = cv2.VideoCapture(self.fvideo_in)
@@ -151,6 +152,7 @@ class CVTracer:
         if self.frame_end < 0:
             self.frame_end = self.n_frames()
 
+
     def release(self):
         # release the capture
         self.cap.release()
@@ -162,11 +164,14 @@ class CVTracer:
         sys.stdout.write("       Video capture released.\n")
         sys.stdout.flush()
 
+
     def tstamp(self):
         return float(self.frame_num)/self.fps
 
+
     def n_frames(self):
         return int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+
     
     def tracked_frames(self):
         return self.frame_num - self.frame_start
@@ -174,6 +179,7 @@ class CVTracer:
     def set_frame(self, i):
         self.frame_num = i
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+
 
     def get_frame(self):
         if self.cap.isOpened():
@@ -188,11 +194,13 @@ class CVTracer:
                 return True
         return False
 
+
     def write_frame(self):
         if self.GPU:
             self.frame = cv2.UMat.get(self.frame)
         
         self.out.write(self.frame)
+
         
     def post_frame(self):
         if ( self.online_viewer ):
@@ -211,6 +219,7 @@ class CVTracer:
                         continue
         return 1
 
+
     def print_current_frame(self):
         t_csc = int(self.frame_num/self.fps * 100)
         t_sec = int(t_csc/100) 
@@ -221,9 +230,11 @@ class CVTracer:
         sys.stdout.flush()
         
 
+
     ############################
     # Contour functions
     ############################
+
 
     def detect_contours(self):
         self.threshold_detect()
@@ -239,6 +250,7 @@ class CVTracer:
                 del self.contours[i]
             else:
                 i += 1
+
 
     def threshold_detect(self, hist = False):
         # blur and current image for smoother contours
@@ -272,6 +284,7 @@ class CVTracer:
                                              self.offset )
         # NOTE: adaptiveThreshold(..., 160, ...) is ad-hoc following histograms
     
+    
     def analyze_contours(self):
         self.coord_pre = self.coord_now.copy()
         self.coord_now = []
@@ -291,6 +304,7 @@ class CVTracer:
             rx = mu20 - mu02
             theta = 0.5 * np.arctan2(ry, rx)
             self.coord_now.append([cx, cy, theta])
+        
         
     def correct_theta(self):
         if len(self.trail) < 1:
@@ -322,6 +336,7 @@ class CVTracer:
                     theta = np.mod( theta + np.pi, 2*np.pi)
             self.coord_now[i][2] = theta 
 
+
     # kmeans_contours uses contour traces and runs clustering algorithm on all 
     # of them to best locate different individuals, works OK for small-n_ind
     def kmeans_contours(self):
@@ -339,6 +354,7 @@ class CVTracer:
             x = int(tuple(cc)[0])
             y = int(tuple(cc)[1])
             self.coord_now.append([x,y,theta])
+    
     
     def trail_update(self):
         self.trail.append(self.coord_now)
@@ -364,11 +380,14 @@ class CVTracer:
     # last few frames in trail,
     def guess(self):
         self.coord_now = self.predict_next()
-        
-        
-    #########################
-    # Frame-to-frame Tracing
-    #########################
+
+
+
+    #############################
+    # Frame-to-frame functions
+    #############################
+
+
     # After determinining the coordinates of each fish, update
     # update the trial object with those coordinates
     def update_trial(self):
@@ -407,6 +426,7 @@ class CVTracer:
             # incorrectly identified contours
             else: self.handle_contour_issues()
                 
+            
     def handle_contour_issues(self):
         # first arrange data in structure to fit with cdist()
         self.coord_pre = self.predict_next()
@@ -470,7 +490,8 @@ class CVTracer:
             current_ids = col_ind.copy()
             reordered = [i[0] for i in sorted(enumerate(current_ids), key=lambda x:x[1])]
             self.coord_now = [x for (y,x) in sorted(zip(reordered,self.coord_now))]
-    
+
+
     def hungarian_algorithm(self):
         xy_pre = np.array(self.coord_pre)[:,[0,1]]
         xy_now = np.array(self.coord_now)[:,[0,1]]    
@@ -480,6 +501,7 @@ class CVTracer:
         
         row_ind, col_ind  =  linear_sum_assignment(cost)
         return row_ind, col_ind
+
 
 
     ############################
@@ -499,6 +521,7 @@ class CVTracer:
         cv2.circle(tank_mask, (row_c,col_c), R, (255, 255, 255), thickness=-1)
         self.frame = cv2.bitwise_and(self.frame, tank_mask)
 
+
     def mask_contours(self):
         self.contour_masks = []
         # add contour areas to mask
@@ -508,9 +531,11 @@ class CVTracer:
             self.contour_masks.append(mask)
 
 
+
     ############################
     # Drawing functions
     ############################
+
     
     def draw(self):
         self.draw_tank(self.trial.tank)
@@ -519,6 +544,7 @@ class CVTracer:
         self.draw_points()
         self.draw_directors()
         self.draw_tstamp()
+
 
     def draw_tstamp(self):
         if self.RGB:
@@ -533,6 +559,7 @@ class CVTracer:
                 int(self.frame_num % self.fps * 100 / self.fps) )
         
         cv2.putText(self.frame, t_str, (5,30), font, 1, color, 2)
+
     
     def draw_tank(self, tank):
         if self.RGB:
@@ -551,6 +578,7 @@ class CVTracer:
         for i in self.contour_list: 
             cv2.drawContours(self.frame, self.contour_repeat, i, color, 2)
 
+
     def draw_points(self):
         self.coord_now = np.array(self.coord_now)
         for i in range(len(self.coord_now)):
@@ -561,6 +589,7 @@ class CVTracer:
             cv2.circle(self.frame, (int(self.coord_now[i][0]), int(self.coord_now[i][1])), 
                        3, 0, -1)
         self.coord_now = list(self.coord_now)
+
 
     def draw_directors(self):
         self.coord_now = np.array(self.coord_now)
@@ -582,4 +611,3 @@ class CVTracer:
                 
                 cv2.line(self.frame, (x0, y0), (x1, y1), 0, 2)
                 cv2.circle(self.frame, (x1, y1), 3, 255, -1)
-
