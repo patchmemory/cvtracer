@@ -73,26 +73,31 @@ class Trial:
                 print("           %s" % (key, self.issue[key]))
     
     def save(self, fname = None):
-        if fname != None:
-            self.fname = fname
-        f = open(self.fname, 'wb')
-        pickle.dump(self.__dict__, f, protocol = 3)
-        sys.stdout.write("\n        Trial object saved as %s \n" % self.fname)
-        sys.stdout.flush()
-        f.close()
+        try:
+            if fname != None:
+                self.fname = fname
+            f = open(self.fname, 'wb')
+            pickle.dump(self.__dict__, f, protocol = 3)
+            sys.stdout.write("\n        Trial object saved as %s \n" % self.fname)
+            sys.stdout.flush()
+            f.close()
+            return True
+        except:
+            return False
 
     def load(self, fname = None):
         if fname != None:
             self.fname = fname
-        
-        f = open(self.fname, 'rb')
-        tmp_dict = pickle.load(f)
-        f.close()
-        self.__dict__.update(tmp_dict) 
-        sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
-        sys.stdout.flush()
-        return True
-
+        try:
+            f = open(self.fname, 'rb')
+            tmp_dict = pickle.load(f)
+            f.close()
+            self.__dict__.update(tmp_dict) 
+            sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
+            sys.stdout.flush()
+            return True
+        except: 
+            return False
 #        try:
 #            f = open(self.fname, 'rb')
 #            tmp_dict = pickle.load(f)
@@ -131,6 +136,104 @@ class Trial:
                 f_traced = "%s/%s/%s" % (vpath_remain,new_dir,self.fvideo_out_std)
                 if os.path.isfile(f_traced):
                     exit()
+
+
+
+    #################################################
+    # experimental transformation functions
+    #################################################
+
+    
+    def convert_pixels_to_cm(self):
+        sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
+        sys.stdout.flush()
+        self.group.convert_pixels(self.tank.row_c, self.tank.col_c, self.tank.r, self.tank.r_cm)
+        sys.stdout.write("\n       %s converted according to tank size and location" % self.fname )
+        sys.stdout.write("\n       as specified in %s" % self.tank.fname )
+        sys.stdout.flush()
+
+
+    def transform_for_lens(self):
+        sys.stdout.write("\n       Transforming to account for wide-angle lens.\n")
+        sys.stdout.flush()
+        #self.group.lens_transformation(A,B,C)
+
+
+    def generate_tag(self, frame_range = None, n_buffer_frames = 2, 
+                     ocut = None, vcut = None, wcut = None ):
+
+        if frame_range == None:
+            frame_range = [ int(self.frame_start), int(self.frame_end) ]           
+        
+        tag = [ "t%02ito%02i" % ( int(frame_range[0]/self.fps/60.), 
+                                  int(frame_range[1]/self.fps/60.)  ) ]
+        if ocut != None:
+            tag.append("o%03.1f" % ocut)
+        if vcut != None:
+            tag.append("v%05.1fto%05.1f" % (vcut[0],vcut[1]))
+        if wcut != None:
+            tag.append("w%05.1fto%05.1f" % (wcut[0],wcut[1]))
+        if ocut != None or vcut != None or wcut != None:
+            tag.append("nbf%i" % n_buffer_frames)
+        
+        tag = '_'.join(tag)
+
+        return tag
+    
+    
+    def parse_tag_range(self, tag = "", tag_key = ""):
+        split_tag = tag.split('_')
+        val = None
+        for entry in split_tag:
+            if len(tag_key) <= len(entry) and tag_key == entry[0:len(tag_key)]:
+                entry = entry[1:]
+                if 'to' in entry:
+                    val = np.array(entry.split('to'))
+                    val = [ float(v) for v in val ]
+                else:
+                    val = float(entry)
+        return val
+
+    
+    def read_tag(self, tag):
+        
+        tag_key = { 'time_range': 't',
+                    'ocut': 'o', 
+                    'vcut': 'v', 
+                    'wcut': 'w', 
+                    'n_buffer_frames': 'nbf' }
+        
+        tag_val = {}
+        for key in tag_key:
+            tag_val[key] = self.parse_tag_range(tag, tag_key[key])
+        
+        tag_val['frame_range'] = [0,0]
+        tag_val['frame_range'][0] = tag_val['time_range'][0]*self.fps*60
+        tag_val['frame_range'][1] = tag_val['time_range'][1]*self.fps*60
+
+        return tag_val
+    
+    
+    def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
+                      ocut = None, vcut = None, wcut = None ):
+        
+        if ocut != None:
+            self.group.cut_occlusion(ocut, n_buffer_frames)
+        if vcut != None:
+            self.group.cut_speed(self.fps, vcut, n_buffer_frames)
+        if wcut != None:
+            self.group.cut_omega(self.fps, wcut, n_buffer_frames)
+        self.group.cut_combine()
+        
+        if frame_range == None:
+            frame_range = [ int(self.frame_start), int(self.frame_end) ]            
+        mean, err = self.group.cut_stats(frame_range[0], frame_range[1])
+        self.cuts_stats = { 'mean': mean, 'err': err }
+        tag = self.generate_tag(frame_range, n_buffer_frames, ocut, vcut, wcut)
+        self.plot_valid(frame_range = frame_range, tag = tag)
+        
+        return tag
+
 
 
     ######################################################
@@ -175,53 +278,6 @@ class Trial:
                     print( "    %s \t%4.2e \t%4.2e " % (stat, result[0], result[1]) )
                 print("\n")
         print("\n")      
-
-
-    #################################################
-    # experimental transformation functions
-    #################################################
-
-    
-    def convert_pixels_to_cm(self):
-        sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
-        sys.stdout.flush()
-        self.group.convert_pixels(self.tank.row_c, self.tank.col_c, self.tank.r, self.tank.r_cm)
-        sys.stdout.write("\n       %s converted according to tank size and location" % self.fname )
-        sys.stdout.write("\n       as specified in %s" % self.tank.fname )
-        sys.stdout.flush()
-
-
-    def transform_for_lens(self):
-        sys.stdout.write("\n       Transforming to account for wide-angle lens.\n")
-        sys.stdout.flush()
-        #self.group.lens_transformation(A,B,C)
-
-    
-    def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
-                      ocut = None, vcut = None, wcut = None ):
-        
-        tag = [ "t%02ito%02i" % ( int(frame_range[0]/self.fps/60.), 
-                                  int(frame_range[1]/self.fps/60.)  ) ]
-        if ocut != None:
-            self.group.cut_occlusion(ocut, n_buffer_frames)
-            tag.append("o%03.1f" % ocut)
-        if vcut != None:
-            self.group.cut_speed(self.fps, vcut, n_buffer_frames)
-            tag.append("v%05.1fto%05.1f" % (vcut[0],vcut[1]))
-        if wcut != None:
-            self.group.cut_omega(self.fps, wcut, n_buffer_frames)
-            tag.append("w%05.1fto%05.1f" % (wcut[0],wcut[1]))
-        tag = '_'.join(tag)
-        self.group.cut_combine()
-        
-        if frame_range == None:
-            frame_range = [ int(self.frame_start), int(self.frame_end) ]
-            
-        mean, err = self.group.cut_stats(frame_range[0], frame_range[1])
-        self.cuts_stats = { 'mean': mean, 'err': err }
-        self.plot_valid(frame_range = frame_range, tag = tag)
-        
-        return tag
 
 
 

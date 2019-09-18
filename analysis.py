@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+from TrAQ.Trial import Trial
 from Analysis.Archive import Archive
 
 def arg_parse():
@@ -16,6 +17,11 @@ def arg_parse():
 
 args = arg_parse()
 
+t_start = 10*60 # min
+t_end = 30*60 # min
+fps = 30
+frame_range = [ t_start*fps, t_end*fps  ]
+
 ns   = [ 1, 2, 5, 10 ]
 ts   = [ "SF", "Pa", "Ti", "Mo" ]
 
@@ -29,7 +35,31 @@ val_bins =  { "dwall":  55 ,
               "speed": 100 ,
               "omega": 160   }
 
+ocut_min = 0
 
 arc = Archive()
 arc.load_trials(args.trial_list, ns, ts)
 arc.print_sorted()
+
+ocut = True
+vcut = True
+wcut = True
+for t in ts:
+    for n in ns:
+        tag = arc.calculate_statistics( t, n, val_name = val_names,
+                                        val_range = [ val_range['dwall'], 
+                                                      val_range['speed'], 
+                                                      val_range['omega'] ],
+                                        val_symm = [ False, False, True],
+                                        val_bins = [ val_bins['dwall'], 
+                                                     val_bins['speed'], 
+                                                     val_bins['omega'] ],
+                                        frame_range = frame_range,
+                                        ocut = ocut, vcut = vcut, wcut = wcut )
+        for val_name in val_names:
+            arc.plot_hist(t, n, val_name, tag)
+            arc.plot_hist_each_group(t, n, val_name, tag)
+            arc.plot_valid(t, n, frame_range, tag)
+
+fname = "analysis.archive"
+arc.save(fname)

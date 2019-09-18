@@ -21,8 +21,10 @@ class Coordinate:
 
 def mean_and_err(l):
     l = np.array(l)
+    if len(l.shape) > 1: l = l[:,0]
     mean_tmp = np.nanmean(l)
     err_tmp = np.nanstd(l) / np.sqrt(sum(~np.isnan(l)))
+    print(" mean and err", mean_tmp, err_tmp)
     return np.array([mean_tmp, err_tmp])
 
 def mean_and_err_hist(l, nbins):

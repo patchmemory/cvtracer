@@ -297,8 +297,8 @@ class Individual:
             if val_symm: 
                 arr = np.concatenate((arr,-arr))
       
-            mean = np.mean(arr)
-            stdd = np.std(arr)
+            mean = np.nanmean(arr)
+            stdd = np.nanstd(arr)
             kurt = spstats.kurtosis(arr,fisher=False)
             h, bin_edges = np.histogram(arr, bins=nbins, range=val_range, density=True)
             binc = ( bin_edges[1:] + bin_edges[:-1] ) / 2.
