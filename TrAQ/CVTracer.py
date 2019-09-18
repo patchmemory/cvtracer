@@ -11,12 +11,15 @@ from TrAQ.Trial import Trial
 from Analysis.Math import angle_diff
 
 
-class VideoCV:
+class CVTracer:
 
     def __init__(self, trial, frame_start = 0, frame_end = -1, 
                  n_pixel_blur = 3, block_size = 15, threshold_offset = 13, 
                  min_area = 20, max_area = 400, len_trail = 3,
                  RGB = False, online = False, view_scale = 1, GPU = False ):
+        
+        self.trial          = trial
+
         
         self.fvideo_in      = trial.fvideo_raw
         self.fvideo_ext     = "mp4"
@@ -41,15 +44,15 @@ class VideoCV:
         self.init_video_capture()
         
         # initialize contour working variables
-        self.contours       = []
-        self.contour_list   = []
-        self.contour_repeat = []
         self.n_pix_avg      = n_pixel_blur
+        self.thresh         = []
         self.block_size     = block_size
         self.offset         = threshold_offset
         self.min_area       = min_area
         self.max_area       = max_area
-        self.thresh         = []
+        self.contours       = []
+        self.contour_list   = []
+        self.contour_repeat = []
 
         # initialize lists for current and previous coordinates
         self.n_ind          = trial.group.n
@@ -57,7 +60,7 @@ class VideoCV:
         self.coord_pre      = []
         self.ind_pre_now    = []
         self.trail          = []
-        self.len_trail      = 3
+        self.len_trail      = len_trail
         
         # choose whether to randomize or preset color list,
         #     (not necessary if running grayscale)
@@ -87,6 +90,38 @@ class VideoCV:
             self.colors.append((color[0],color[1],color[2]))
         print("    Color list set as follows, ")
         print(self.colors)
+        
+        
+    def print_title(self):
+        sys.stdout.write("\n\n")
+        sys.stdout.write("\t   ###########################################################\n")
+        sys.stdout.write("\t   #                                                         #\n")
+        sys.stdout.write("\t   #      ___ __   __  _____  ___    _     ___  ___  ___     #\n")
+        sys.stdout.write("\t   #     / __\\\ \ / / |__ __|| _ \  / \   / __|| __|| _ \    #\n")
+        sys.stdout.write("\t   #    | (__  \ V / -  | |  |   / / ^ \ | (__ | _| |   /    #\n")
+        sys.stdout.write("\t   #     \___|  \_/     |_|  |_|_\/_/ \_\ \___||___||_|_\    #\n")
+        sys.stdout.write("\t   #                                      v2.0, sept 2019    #\n")
+        sys.stdout.write("\t   #                                                         #\n")
+        sys.stdout.write("\t   #                                  press <esc> to exit    #\n")
+        sys.stdout.write("\t   #                                                         #\n")
+        sys.stdout.write("\t   ###########################################################\n")
+        sys.stdout.write("\n")
+        sys.stdout.write("\t                                 adam patch, fau, jupiter 2019\n")
+        sys.stdout.write("\t                              github.com/patchmemory/cv-tracer\n")
+        sys.stdout.write(" \n\n")
+        sys.stdout.write("\t       Tracing %i fish using video, \n" % self.trial.group.n)
+        sys.stdout.write("\t         %s \n" % (self.trial.fvideo_raw))
+        sys.stdout.write(" \n\n")
+        sys.stdout.write("\t       Writing output to \n")
+        sys.stdout.write("\n")
+        sys.stdout.write("\t         video: \n" )
+        sys.stdout.write("\t           %s \n" % (self.trial.fvideo_out))
+        sys.stdout.write("\t         data: \n" )
+        sys.stdout.write("\t           %s \n" % (self.trial.fname))
+        sys.stdout.write(" \n\n")
+        sys.stdout.flush()
+
+
 
 
     ############################
@@ -159,7 +194,7 @@ class VideoCV:
         
         self.out.write(self.frame)
         
-    def show_frame(self):
+    def post_frame(self):
         if ( self.online_viewer ):
             cv2.imshow('frame', self.frame) 
             return_key = 13
@@ -329,33 +364,90 @@ class VideoCV:
     # last few frames in trail,
     def guess(self):
         self.coord_now = self.predict_next()
+        
+        
+    #########################
+    # Frame-to-frame Tracing
+    #########################
+    # After determinining the coordinates of each fish, update
+    # update the trial object with those coordinates
+    def update_trial(self):
+        tstamp = 1.*self.frame_num / self.fps
+        self.trial.group.add_entry(tstamp, self.coord_now)
     
-    def contour_connect(self):
+    # this is the main algorithm the tracer follows when trying 
+    # to associate individuals identified in this frame with 
+    # those identified in the previous frame/s
+    def connect_frames(self):
+
+        # for initial frames, make "educated guesses" to at 
+        # least get the tracking startedstarted
+        if self.tracked_frames() < self.len_trail:
+            self.kmeans_contours()
+            if self.tracked_frames() > 1:
+                self.reorder_hungarian()
+        else:
+            self.connect_coordinates()   
+        # regardless of method, check for misdirection
+        self.correct_theta()
+        # once new coordinates have been determined, update trail
+        self.trail_update()
+    
+    
+    def connect_coordinates(self):
+        # if tracer found correct number of contours, assume proper tracing 
+        # and connect to previous frame based on hugarian min-dist algorithm
+        if len(self.contours) == self.n_ind: self.reorder_hungarian()            
+        # if tracer has not found correct number of contours, consider the
+        # situation for special handling of frame-to-frame connections
+        else:
+            # if no contours found, make guess based on trail prediction
+            if len(self.contours) == 0: self.guess()
+            # for all other cases, work with occlusions and 
+            # incorrectly identified contours
+            else: self.handle_contour_issues()
+                
+    def handle_contour_issues(self):
+        # first arrange data in structure to fit with cdist()
         self.coord_pre = self.predict_next()
         xy_pre = np.array(self.coord_pre)[:,[0,1]]
         xy_now = np.array(self.coord_now)[:,[0,1]]
-        # calculate the distance matrix and then look  
+
+        # calculate the distance matrix
         dist_arr = cdist(xy_pre,xy_now)
+
+        # find coordinate from previous frame that most readily
+        # match with current set of contours
         self.ind_pre_now = [ 0 for i in range(len(self.coord_pre)) ]
         for i in range(len(self.coord_pre)):
             index = np.argmin(dist_arr[i]) # i'th array has distances to predictions from pre
             self.ind_pre_now[i] = index # for i, what is corresponding index of pre (j)
-    
-        # identify any unclaimed contours
-        contourID_unclaimed = []
+
+        # find any unclaimed individuals and place in a list
+        ind_unclaimed = []
         for i in range(len(self.coord_now)):
             for j in range(len(self.coord_pre)):
                 if i == self.ind_pre_now[j]:
                     break # exits current for loop, contour is located
                 if j == len(self.coord_pre) - 1:
-                    contourID_unclaimed.append(i)
-    
-        # choose the closest contour to guess even if two choose the same
-        for i in range(len(contourID_unclaimed)):
-            index = np.argmin(dist_arr[:,contourID_unclaimed[i]])
-            self.ind_pre_now[index] = contourID_unclaimed[i]
-    
-        # identify contours containing multiple points
+                    ind_unclaimed.append(i)
+
+        # for those unmatched individuals, connect them with 
+        # contour coordinates even if other individuals have 
+        # already been associated with this point
+        for i in range(len(ind_unclaimed)):
+            index = np.argmin(dist_arr[:,ind_unclaimed[i]])
+            self.ind_pre_now[index] = ind_unclaimed[i]
+
+        # then reorder coordinates based on each's previous ID
+        meas_now_tmp = self.coord_now
+        self.coord_now = self.coord_pre
+        for i in range(len(self.coord_now)):
+            self.coord_now[i] = meas_now_tmp[self.ind_pre_now[i]]
+
+        # and then just for the sake of it starting to think
+        # about these particular contours and how we can use 
+        # them to better locate individuals in close proximity
         self.contour_repeat = []
         contour_deficit = len(self.coord_pre) - len(self.coord_now)
         sorted_ind_pre_now = sorted(self.ind_pre_now)
@@ -364,10 +456,8 @@ class VideoCV:
             i += 1
             if sorted_ind_pre_now[i] == sorted_ind_pre_now[i-1]:
                 self.contour_repeat.append(sorted_ind_pre_now[i])
-        # then run the theta-correcting function to properly align
-
-
-
+        
+        
     def reorder_hungarian(self):
         # try this out... do hungarian algorithm on prediction of next step
         # ... just remove if it is making a mess...
@@ -383,30 +473,24 @@ class VideoCV:
     
     def hungarian_algorithm(self):
         xy_pre = np.array(self.coord_pre)[:,[0,1]]
-        xy_now  = np.array(self.coord_now)[:,[0,1]]    
+        xy_now = np.array(self.coord_now)[:,[0,1]]    
         xy_pre = list(xy_pre)
-        xy_now  = list(xy_now)
-        cost = cdist(xy_pre, xy_now)
-        row_ind, col_ind = linear_sum_assignment(cost)
-        return row_ind, col_ind
-
-
-    def reorder_connected(self):
-        meas_now_tmp = self.coord_now
-        self.coord_now = self.coord_pre
-        for i in range(len(self.coord_now)):
-            self.coord_now[i] = meas_now_tmp[self.ind_pre_now[i]]
+        xy_now = list(xy_now)
+        cost   = cdist(xy_pre, xy_now)
         
+        row_ind, col_ind  =  linear_sum_assignment(cost)
+        return row_ind, col_ind
 
 
     ############################
     # Masking functions
     ############################
     
-    def mask_tank(self, tank):
-        row_c = int(tank.row_c) + 1
-        col_c = int(tank.col_c) + 1
-        R = int(tank.r) + 1
+        
+    def mask_tank(self):
+        row_c = int(self.tank.row_c) + 1
+        col_c = int(self.tank.col_c) + 1
+        R     = int(self.tank.r) + 1
         if self.RGB:
             tank_mask = np.zeros_like(self.frame)
         else:
@@ -428,11 +512,13 @@ class VideoCV:
     # Drawing functions
     ############################
     
-    def draw_all(self):
-        self.draw_tstamp()
-        self.draw_contours()
+    def draw(self):
+        self.draw_tank(self.trial.tank)
+        if ( len(self.contour_list) != self.trial.group.n ):
+            self.draw_contour_repeat()
         self.draw_points()
         self.draw_directors()
+        self.draw_tstamp()
 
     def draw_tstamp(self):
         if self.RGB:
