@@ -31,5 +31,5 @@ val_bins =  { "dwall":  55 ,
 
 
 arc = Archive()
-arc.load_trial_set(args.trial_list, ns, ts)
+arc.load_trials(args.trial_list, ns, ts)
 arc.print_sorted()
