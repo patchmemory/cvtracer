@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 import argparse
 from TrAQ.Trial import Trial
-from TrAQ.Tracer import Tracer
-from TrAQ.VideoCV import VideoCV
+from TrAQ.CVTracer import CVTracer
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="OpenCV2 Fish Tracker")
@@ -23,45 +22,39 @@ def arg_parse():
 
 
 args = arg_parse()
-
+# open up the Trial
 trial       = Trial(args.raw_video)
+# initialize a CVTracer
 frame_start = int(args.t_start * trial.fps)
 frame_end   = int(args.t_end   * trial.fps)
-videocv     = VideoCV(trial, frame_start, frame_end, 
-                      args.n_pixel_blur, args.block_size, args.thresh_offset, 
-                      args.min_area, args.max_area, args.trail_length, 
-                      args.RGB, args.online_viewer, args.view_scale, args.GPU ) 
+cvt         = CVTracer( trial, frame_start, frame_end, 
+                        args.n_pixel_blur, args.block_size, args.thresh_offset, 
+                        args.min_area, args.max_area, args.trail_length, 
+                        args.RGB, args.online_viewer, args.view_scale, args.GPU ) 
 
-tracer = Tracer(trial, videocv)
-tracer.print_title()
-tracer.videocv.set_frame(frame_start)
-
-for i_frame in range(videocv.frame_start, videocv.frame_end + 1):
-
-    # load current frame into the tracer video
-    if tracer.videocv.get_frame():
-
+cvt.print_title()
+cvt.set_frame(frame_start)
+for i_frame in range(cvt.frame_start, cvt.frame_end + 1):
+    # load next frame into video tracer
+    if cvt.get_frame():
         # first remove all information from outside of tank
-        tracer.mask_tank()
-        
-        # detect and analyze contours in current frame
-        tracer.videocv.detect_contours()
-        tracer.videocv.analyze_contours()
-
+        cvt.mask_tank()       
+        # detect contours in current frame
+        cvt.detect_contours()
+        # analyze contours for center and long axis
+        cvt.analyze_contours()
         # estimate connection between last frame and current frame
-        tracer.connect_frames()
-
+        cvt.connect_frames()
         # store results from current frame in the trial object
-        tracer.update_trial()
-
+        cvt.update_trial()
         # write frame with traces to new video file, show if online
-        tracer.draw()
-        tracer.videocv.write_frame()
-        if not tracer.videocv.show_frame():
-            break
-
+        cvt.draw()
+        # write frame to video output
+        cvt.write_frame()
+        # post frame to screen, may accept user input to break loop
+        if not cvt.post_frame(): break
         # print time to terminal
-        tracer.videocv.print_current_frame()
-
-tracer.videocv.release()
-tracer.trial.save()
+        cvt.print_current_frame()
+# put things away
+cvt.release()
+cvt.trial.save()
