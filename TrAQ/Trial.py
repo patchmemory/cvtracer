@@ -14,6 +14,8 @@ class Trial:
 
         self.result = {}
         self.issue  = {}
+        
+        self.cut_stats = {}
 
         self.fname_std = 'trial.pik'
         self.fvideo_raw_std = 'raw.mp4'
@@ -70,7 +72,7 @@ class Trial:
         if self.issue:
             print("       Known issues: " )
             for key in self.issue:
-                print("           %s" % (key, self.issue[key]))
+                print("           %s: %s" % (key, self.issue[key]))
     
     def save(self, fname = None):
         try:

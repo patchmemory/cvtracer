@@ -15,6 +15,8 @@ class Archive:
         self.trials = {}
         self.result = {}
 
+        self.valid_speed_min = 0.5
+
     def save(self, fname = None):
         if fname != None:
             self.fname = fname
@@ -131,18 +133,28 @@ class Archive:
 
         tag = ""
         for trial in self.trials[self.trial_key(t, n)]:
+            print("  Working on..." )
             trial.print_info()
             try:
                 tag = trial.evaluate_cuts(frame_range, n_buffer_frames,
-                                          0, val_range[1], val_range[2])
+                                              0, val_range[1], val_range[2])
 
-                trial.calculate_statistics( val_name, val_range, val_symm, val_bins, 
-                                        frame_range, ocut, vcut, wcut, tag)
-                for val in val_name:
-                    for stat in stat_keys:
-                        key = val + stat
-                        stat_list[key].append(trial.group.get_result(val, stat, tag))
+                # test to make sure trial has enough active time
+                if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
 
+    
+                    trial.calculate_statistics( val_name, val_range, val_symm, val_bins, 
+                                            frame_range, ocut, vcut, wcut, tag)
+                    for val in val_name:
+                        for stat in stat_keys:
+                            key = val + stat
+                            stat_list[key].append(trial.group.get_result(val, stat, tag))
+    
+                else:
+                    print("\n\n")
+                    print("    Warning! Trial has too few valid frames. ")
+                    print("             Minimum fraction of valid frames = %5.3f" %
+                                                              self.valid_speed_min)
             except:
                 print("\n\n")
                 print("    Warning! Issue evaluating trial cuts and/or stats. ")
@@ -190,15 +202,25 @@ class Archive:
         hist = []
         mean = []
         for trial in self.trials[self.trial_key(t, n)]:
+            print("  Plotting ")
+            trial.print_info()
             try:
-                trial_hist = trial.get_group_result(val_name, 'hist', tag)
-                trial_mean = trial.get_group_result(val_name, 'mean', tag)
-                hist.append(trial_hist)
-                mean.append(trial_mean)
+                # test to make sure trial has enough active time
+                if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
+                    trial_hist = trial.get_group_result(val_name, 'hist', tag)
+                    trial_mean = trial.get_group_result(val_name, 'mean', tag)
+                    hist.append(trial_hist)
+                    mean.append(trial_mean)
+                else:
+                    print("\n\n")
+                    print("    Warning! Trial has too few valid frames. ")
+                    print("             Minimum fraction of valid frames = %5.3f" %
+                                                              self.valid_speed_min)
             except:
-                print("\n\n")
-                print("    Warning! Issue gathering results from: ")
-                trial.print_info()
+                    print("\n\n")
+                    print("    Warning! Issue gathering results from: ")
+
+                
         color_set = plt.rcParams['axes.prop_cycle'].by_key()['color']
         for i in range(len(hist)):
             h = hist[i]
@@ -220,16 +242,26 @@ class Archive:
     def plot_valid(self, t, n, frame_range = None, tag = None, save = True):
         cuts = [ 'ocut', 'vcut', 'wcut', 'cut']
         valid = { cut: [] for cut in cuts}
-        for trial in self.trials[self.trial_key(t, n)]:    
-            for cut in cuts:
-                try:
-                    valid_tmp = trial.group.valid_frame_fraction(frame_range, 
-                                                                 cut_name = cut)
-                    valid[cut].append(np.nanmean(valid_tmp))
-                except:
+        for trial in self.trials[self.trial_key(t, n)]:
+            print("  Plotting ")
+            trial.print_info()
+            try:
+                # test to make sure trial has enough active time
+                if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
+                    for cut in cuts:
+                        valid_tmp = trial.group.valid_frame_fraction(frame_range, 
+                                                                     cut_name = cut)
+                        valid[cut].append(np.nanmean(valid_tmp))
+                else:
                     print("\n\n")
-                    print("    Warning! Issue gathering results from: ")
+                    print("    Warning! Trial has too few valid frames. ")
+                    print("             Minimum fraction of valid frames = %5.3f" %
+                                                              self.valid_speed_min)
                     trial.print_info()
+            except:
+                print("\n\n")
+                print("    Warning! Issue gathering results from: ")
+                trial.print_info()
 
                 
         index = np.arange(len(cuts))
