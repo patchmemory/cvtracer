@@ -126,7 +126,7 @@ class Group:
                 self.calculate_distance_alignment()
                 
             for i_fish in range(self.n_fish()):
-                distance_nn = self.dij_mij[i_fish][:,0]
+                distance_nn = np.array(self.fish[i_fish].get_dij_mij(1))
                 distance_nn = distance_nn[:,0]
                 #print("distance_nn",distance_nn)
                 print("    ... for fish %i, " % i_fish)
@@ -186,7 +186,7 @@ class Group:
         return np.sqrt(pow(x[j]-x[i],2) +  pow(y[j]-y[i],2))
 
     def calculate_distance_alignment(self):
-        self.dij_mij = [ [ [] for j in range(self.fish[i].n_frames()) ] for i in range(self.n_fish()) ]
+        _dij_mij = [ [ [] for j in range(self.fish[i].n_frames()) ] for i in range(self.n_fish()) ]
 
         x = [ [] for i in range(self.n_fish()) ]
         y = [ [] for i in range(self.n_fish()) ]
@@ -211,10 +211,36 @@ class Group:
                         mij = self.alignment(i_fish,j_fish,thetas_tmp)
                         dist_align_tmp.append([dij,mij])
                 dist_align_tmp.sort()
-                self.dij_mij[i_fish][frame] = dist_align_tmp
+                _dij_mij[i_fish][frame] = dist_align_tmp
 
+        _dij_mij = np.array(_dij_mij)
+        self.dij_mij = []
+        for i_fish in range(self.n_fish()):
+            self.fish[i_fish].set_dij_mij(_dij_mij[i_fish])
+            self.dij_mij.extend(_dij_mij[i_fish])
         self.dij_mij = np.array(self.dij_mij)
+            
+            
+    def collect_distance_alignment(self, frame_range = None, 
+                                   ocut = False, vcut = False, wcut = False):
+        self.dij_mij = []
+        for i_fish in range(self.n_fish()):
+            _dij_mij = self.fish[i_fish].get_dij_mij(self.n_fish()-1, frame_range, 
+                                                     ocut, vcut, wcut)
+            self.dij_mij.extend(_dij_mij)
+        self.dij_mij = np.array(self.dij_mij)
+        
 
+    def neighbor_bouts(self, d_cut = 10, frame_range = None,
+                       ocut = False, vcut = False, wcut = False):
+        neighbor_bouts = []
+        for i_fish in range(self.n_fish()):
+            #try:
+            neighbor_bouts.extend(self.fish[i_fish].nearest_distance_bout(
+                                         d_cut, frame_range, ocut, vcut, wcut))
+            #except:
+                #print("  Issue gathering nearest neighbor bouts.")
+        return neighbor_bouts
 
     def nearest_neighbor_distance_frame(self,i_frame): 
         print("i-frame=",i_frame)

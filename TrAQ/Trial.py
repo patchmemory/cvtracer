@@ -2,6 +2,9 @@ import os
 import sys
 import pickle
 import numpy as np
+import copy
+import matplotlib.cm as mpl_cm
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from TrAQ.Group import Group
 from TrAQ.Tank import Tank
@@ -271,7 +274,7 @@ class Trial:
         for val in vals:
             print("  Summary of %s statistics " % (val))
             for stat in stat_names:
-                result = self.group_result(val,stat,tag)
+                result = self.get_group_result(val,stat,tag)
                 if stat == 'hist':
                     for i in range(len(result)):
                         print( "    %i \t%4.2e \t%4.2e " % 
@@ -307,10 +310,22 @@ class Trial:
 
     def calculate_pairwise(self):
         sys.stdout.write("\n")
-        sys.stdout.write("       Calculating neighbor distance and alignment across group... \n")
+        sys.stdout.write("       Calculating pair distance and alignment across group... \n")
         self.group.calculate_distance_alignment()
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
+        
+    def gather_pairwise(self, frame_range = None, 
+                           ocut = False, vcut = False, wcut = False,
+                           tag = None):
+        sys.stdout.write("       Collecting pair info according to cuts... \n")
+        self.group.collect_distance_alignment(frame_range = frame_range, 
+                                              ocut = ocut, vcut = vcut, wcut = wcut)
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
+        self.plot_distance_alignment(tag)
+
+        
 
 
     def calculate_statistics(self, 
@@ -373,8 +388,27 @@ class Trial:
         else:
             plt.show()
         plt.clf()
+  
+
+    def plot_distance_alignment(self, tag = None, save = True):
+        my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
+        my_cmap.set_bad(my_cmap.colors[0])
         
-        
+        plt.ylabel(r"Alignment ($\cos\theta_{ij}$)")
+        plt.xlabel("Distance (cm)")
+        plt.hist2d(self.group.dij_mij[:,0], self.group.dij_mij[:,1],
+                   bins=100, range=[[0,self.tank.r_cm],[-1,1]], 
+                   norm = colors.LogNorm(), cmap = my_cmap)
+        plt.colorbar()
+        plt.tight_layout()
+        if save:
+            fig_name = "%s/dij_mij_%s.png" % (self.fdir, tag)
+            plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()      
+       
+
     def plot_valid(self, frame_range = None, tag = None, save = True):
         cuts = [ 'ocut', 'vcut', 'wcut', 'cut']
         valid = {}
@@ -407,3 +441,4 @@ class Trial:
         else:
             plt.show()
         plt.clf()
+

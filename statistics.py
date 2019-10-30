@@ -45,4 +45,8 @@ trial.calculate_statistics( val_name  = [ 'dwall', 'speed', 'omega' ],
                             frame_range = frame_range, 
                             ocut = True, vcut = True, wcut = True, tag = cut_tag)
 
+trial.gather_pairwise(frame_range = frame_range, 
+                         ocut = True, vcut = True, wcut = True, 
+                         tag = cut_tag)
+
 trial.save()

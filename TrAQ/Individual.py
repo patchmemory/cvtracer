@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 import scipy.stats as spstats
+import itertools
 
 
 class Individual:
@@ -139,6 +140,52 @@ class Individual:
         self.df['d_nn'] = d_nn.tolist()
 
 
+    def set_dij_mij(self, dij_mij):
+        for j in range(len(dij_mij[0])):
+            d_key = "d_n%i" % j
+            m_key = "m_n%i" % j
+
+            self.df[d_key] = dij_mij[:,j,0].tolist()
+            self.df[m_key] = dij_mij[:,j,1].tolist()
+
+
+    def get_dij_mij(self, n_neighbor, frame_range = None, 
+                    ocut = False, vcut = False, wcut = False):
+        
+        dij_mij = []
+        for j in range(n_neighbor):
+            d_key = "d_n%i" % j
+            m_key = "m_n%i" % j
+
+            if d_key not in self.df.columns:
+                print("\n  %s not found in DataFrame. Skipping statistics...\n" % d_key)
+            elif m_key not in self.df.columns:
+                print("\n  %s not found in DataFrame. Skipping statistics...\n" % m_key)
+            else:                
+                _dij = np.array(self.df[d_key])
+                _mij = np.array(self.df[m_key])
+                _dij_mij = np.column_stack((_dij,_mij))
+                print(" Shape before cuts: ", _dij_mij.shape)
+                _dij_mij = self.apply_cuts(_dij_mij, frame_range = frame_range, 
+                                           ocut = ocut, vcut = vcut, wcut = wcut )                
+                print(" Shape after cuts: ", _dij_mij.shape)
+                dij_mij.extend(_dij_mij.tolist())
+
+        return dij_mij
+    
+    def nearest_distance_bout(self, d_cut=10, frame_range = None,
+                              ocut = False, vcut = False, wcut = False):
+        bouts = []
+        key = 'd_n0'
+        if key not in self.df.columns:
+            print("\n  %s not found in DataFrame. Skipping statistics...\n" % key)
+        else:
+            d_nn = np.array(self.df[key])
+            self.cut_array(d_nn, ocut, vcut, wcut)
+            d_nn = d_nn[frame_range[0]:frame_range[1]]
+            d_nn = d_nn[np.logical_not(self.cut_arr[frame_range[0]:frame_range[1]])]
+            bouts = [ sum( 1 for _ in group ) for key, group in itertools.groupby( d_nn <= d_cut ) if key ]
+        return bouts
 
 
     #########################
@@ -215,7 +262,7 @@ class Individual:
     # completed prior to running this function.
     def cut_array(self, arr, ocut = False, vcut = False, wcut = False ):
         
-        self.cut_arr = np.zeros_like(arr,dtype=bool)
+        self.cut_arr = np.zeros(arr.shape[0],dtype=bool)
 
         if ocut:
             if 'ocut' not in self.df.columns:
@@ -238,6 +285,44 @@ class Individual:
             wcut_arr = self.df['wcut']
             self.cut_arr = self.cut_arr | wcut_arr
 
+
+    def apply_cuts(self, arr, 
+                   val_range = None, val_symm = False, frame_range = None, 
+                   ocut = False, vcut = False, wcut = False):
+
+        # first combine all cuts in self.cut_arr
+        self.cut_array(arr, ocut, vcut, wcut)
+        # then select frames from desired range of times
+        if frame_range == None:
+            frame_range = [0, len(arr)]
+        arr = arr[frame_range[0]:frame_range[1]]
+        arr = arr[np.logical_not(self.cut_arr[frame_range[0]:frame_range[1]])]
+        # remove any NaN values
+        not_nan = ~np.isnan(arr)
+        if len(not_nan.shape) == 1:
+            arr = arr[not_nan]
+        elif len(not_nan.shape) == 2:
+            s_not_nan = np.zeros(not_nan.shape[0], dtype=bool)
+            for i in range(len(s_not_nan)):
+                if sum(not_nan[i]) == len(not_nan[i]):
+                    s_not_nan[i] = True
+                else:
+                    s_not_nan[i] = False
+            arr = arr[s_not_nan]
+            
+        print("   apply_cuts ", arr.shape, 6)
+        # exclude values outside desired range of values
+        if val_range != None:
+            if val_range[0] != None:
+                arr = arr[arr >= val_range[0]]
+            if val_range[1] != None:
+                arr = arr[arr <= val_range[1]]
+        # if symmetric (e.g. omega), symmetrize to improve stats like kurtosis
+        if val_symm: 
+            arr = np.concatenate((arr,-arr))
+
+        return arr
+    
 
 
     #########################################
@@ -267,6 +352,7 @@ class Individual:
                 del self.result[key]
 
 
+
     # calculate_stats(...) takes the name of a value and calculates its 
     # statistics across valid frames. User can specify a range of values and a 
     # range of time, along with whether or not to use speed and occlusion cuts. 
@@ -280,23 +366,12 @@ class Individual:
             print("\n  %s not found in DataFrame. Skipping statistics...\n" % val_name)
       
         else:
-            arr = np.array(self.df[val_name])
-            self.cut_array(arr, ocut, vcut, wcut)
-            arr = arr[np.logical_not(self.cut_arr)]
-            if frame_range == None:
-                frame_range = [0, len(arr)]
-
-            arr = arr[frame_range[0]:frame_range[1]]
-            arr = arr[~np.isnan(arr)]
-            if val_range != None:
-                if val_range[0] != None:
-                    arr = arr[arr >= val_range[0]]
-                if val_range[1] != None:
-                    arr = arr[arr <= val_range[1]]
-                
-            if val_symm: 
-                arr = np.concatenate((arr,-arr))
-      
+            arr = np.array(self.df[val_name])          
+            arr = self.apply_cuts(arr, 
+                                  val_range = val_range, val_symm = val_symm, 
+                                  frame_range = frame_range, 
+                                  ocut = ocut, vcut = vcut, wcut = wcut )
+                    
             mean = np.nanmean(arr)
             stdd = np.nanstd(arr)
             kurt = spstats.kurtosis(arr,fisher=False)

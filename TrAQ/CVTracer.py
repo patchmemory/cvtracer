@@ -239,9 +239,14 @@ class CVTracer:
     def detect_contours(self):
         self.threshold_detect()
         # find all contours 
-        image, self.contours, hierarchy = cv2.findContours( self.thresh, 
+#        image, self.contours, hierarchy = cv2.findContours( self.thresh, 
+#                                                     cv2.RETR_TREE, 
+#                                                     cv2.CHAIN_APPROX_SIMPLE )
+
+        self.contours, hierarchy = cv2.findContours( self.thresh, 
                                                      cv2.RETR_TREE, 
                                                      cv2.CHAIN_APPROX_SIMPLE )
+
         # test found contours against area constraints
         i = 0
         while i < len(self.contours):
@@ -278,10 +283,16 @@ class CVTracer:
         #   
         self.thresh = cv2.adaptiveThreshold( gray, 
                                              160, 
-                                             cv2.ADAPTIVE_THRESH_MEAN_C, 
+                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                              cv2.THRESH_BINARY_INV,
                                              self.block_size, 
                                              self.offset )
+       # self.thresh = cv2.adaptiveThreshold( gray, 
+       #                                      160, 
+       #                                      cv2.ADAPTIVE_THRESH_MEAN_C, 
+       #                                      cv2.THRESH_BINARY_INV,
+       #                                      self.block_size, 
+       #                                      self.offset )
         # NOTE: adaptiveThreshold(..., 160, ...) is ad-hoc following histograms
     
     
@@ -510,9 +521,9 @@ class CVTracer:
     
         
     def mask_tank(self):
-        row_c = int(self.tank.row_c) + 1
-        col_c = int(self.tank.col_c) + 1
-        R     = int(self.tank.r) + 1
+        row_c = int(self.trial.tank.row_c) + 1
+        col_c = int(self.trial.tank.col_c) + 1
+        R     = int(self.trial.tank.r) + 1
         if self.RGB:
             tank_mask = np.zeros_like(self.frame)
         else:
