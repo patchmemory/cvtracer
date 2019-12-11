@@ -133,7 +133,8 @@ class CVTracer:
         self.cap = cv2.VideoCapture(self.fvideo_in)
         if self.cap.isOpened() == False:
             sys.exit('Video file cannot be read! Please check input_vidpath ' 
-                     + 'to ensure it is correctly pointing to the video file.')
+                     + 'to ensure it is correctly pointing to the video file. \n %s' % self.fvideo_in)
+             
             
         # Video writer class to output video with contour and centroid of tracked
         # object(s) make sure the frame size matches size of array 'final'

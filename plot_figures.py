@@ -105,7 +105,7 @@ def plot_stat(m,ts,val,stat,tag, t_name, val_name, stat_name, save=True):
     plt.clf()
 
 
-def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True):
+def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_weighted = False):
     
     left_shift = 0.03
     plt.rcParams.update({'font.size': 14})
@@ -121,6 +121,7 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True):
     ax[0].set_ylabel("normalized count", fontsize = 16)
     ax[0].set_xlabel(val_name[val], fontsize = 16)
     ax[0].set_xlim(vrange)
+    ax[0].set_ylim(bottom=0)
 
     val = 'speed'
     vrange = [0,75]
@@ -131,24 +132,31 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True):
                             alpha=0.5, label=t_name[t])
     ax[1].set_xlabel(val_name[val], fontsize = 16)
     ax[1].set_xlim(vrange)
+    ax[1].set_ylim(bottom=0)
 
 
     val = 'omega'
     vrange1 = [0,10]
+    if omega_weighted:
+        weight = h[hkey(t,n,val)][:,0]
+        vrange1 = [0,25]
+    else:
+        weight = np.ones_like(h[hkey(t,n,val)][:,0])
     for t in ts:
         ax[2].fill_between( h[hkey(t,n,val)][:,0],
-                            h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
-                            h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
+                           weight* (h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
+                           weight* (h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
                             alpha=0.5, label=t_name[t])
     ax[2].set_xlabel(val_name[val], fontsize = 16)
     ax[2].set_xlim(vrange1)
+    ax[2].set_ylim(bottom=0)
 
     vrange2 = [0,25]
     inset_ax2 = plt.axes([0.75-left_shift,0.5,0.14,0.35])
     for t in ts:
         inset_ax2.fill_between( h[hkey(t,n,val)][:,0],
-                            h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
-                            h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
+                           weight* (h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
+                           weight* (h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
                             alpha=0.5, label=t_name[t])
     inset_ax2.set_xlabel(val_name[val], fontsize = 16)
     inset_ax2.set_xlim(vrange2)
@@ -178,7 +186,7 @@ def cumulative(arr):
     return acc
 
 
-def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True):
+def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, omega_weighted = False):
     
     left_shift = 0.03
     plt.rcParams.update({'font.size': 14})
@@ -199,6 +207,7 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True):
         ax[row][0].set_ylabel("normalized count", fontsize = 16)
         ax[row][0].set_xlabel(val_name[val], fontsize = 16)
         ax[row][0].set_xlim(vrange)
+        ax[row][0].set_ylim(bottom=0)
 
         ## inset 
         box = ax[row][0].get_position()
@@ -236,6 +245,7 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True):
                                 alpha=0.5, label=n)
         ax[row][1].set_xlabel(val_name[val], fontsize = 16)
         ax[row][1].set_xlim(vrange)
+        ax[row][1].set_ylim(bottom=0)
 
         ## inset 
         stat = 'stdd'
@@ -262,16 +272,24 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True):
         #inset[row][1].set_ylim(bottom=0)
         inset[row][1].set_xlim([0,12])
         inset[row][1].set_xlabel("group size")
+
+        
  
         val = 'omega'
         vrange1 = [0,10]
+        if omega_weighted:
+            vrange1 = [0,25]
+            weight = h[hkey(t,n,val)][:,0]
+        else:
+            weight = np.ones_like(h[hkey(t,n,val)][:,0])
         for n in ns:
             ax[row][2].fill_between( h[hkey(t,n,val)][:,0],
-                                h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
-                                h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
+                                weight*(h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
+                                weight*(h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
                                 alpha=0.5, label=n)
         ax[row][2].set_xlabel(val_name[val], fontsize = 16)
         ax[row][2].set_xlim(vrange1)
+        ax[row][2].set_ylim(bottom=0)
  
         ## inset 
         vrange2 = [0,25]
@@ -284,8 +302,8 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True):
                                   0.55*width[1]])
         for n in ns:
             inset[row][2].fill_between( h[hkey(t,n,val)][:,0],
-                                h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
-                                h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
+                                weight*(h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
+                                weight*(h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
                                 alpha=0.5, label=n)
         inset[row][2].set_xlabel(val_name[val], fontsize = 16)
         inset[row][2].set_xlim(vrange2)
@@ -348,11 +366,13 @@ s = load_stats(ts,ns,vals,stats,tag)
 
 save = True 
 
+om_weight = False 
 # figure 3
 _ts = ['SF', 'Pa']
+#_ts = ['SF', 'Pa', 'Mo', 'Ti']
 n = 1
-figure_single_fish_compare(h, _ts, tag, t_name, val_name, save)
-figure_multi_fish_compare(h, s, _ts, ns, tag, t_name, val_name, save)
+figure_single_fish_compare(h, _ts, tag, t_name, val_name, save, omega_weighted = om_weight)
+figure_multi_fish_compare(h, s, _ts, ns, tag, t_name, val_name, save, omega_weighted = om_weight)
 #plot_hist_t_compare(h,_ts,n,'dwall',tag, t_name, val_name, save)
 #plot_hist_t_compare(h,_ts,n,'speed',tag, t_name, val_name, save)
 #

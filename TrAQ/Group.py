@@ -98,6 +98,10 @@ class Group:
         for i_fish in range(self.n_fish()):
             self.fish[i_fish].calculate_local_acceleration(fps)
 
+    def calculate_tank_crossing(self, R):
+        for i_fish in range(self.n_fish()):
+            self.fish[i_fish].calculate_tank_crossing(R)
+
     def convert_pixels(self, row_c, col_c, L_pix, L_m):
         for i_fish in range(self.n_fish()):
             self.fish[i_fish].convert_pixels(row_c, col_c, L_pix, L_m)
@@ -184,6 +188,50 @@ class Group:
 
     def distance(self,i,j,x,y):
         return np.sqrt(pow(x[j]-x[i],2) +  pow(y[j]-y[i],2))
+
+
+    def wall_distance(self, i, x, y, r_tank = 55.5):
+        return r_tank - np.sqrt(pow(x[i],2) + pow(y[i],2))
+
+    def wall_alignment(self,i, x, y, theta):
+        r_pos = np.sqrt(x[i]**2 + y[i]**2)
+        n_hat = np.column_stack((x[i]/r_pos, y[i]/r_pos))
+        return np.cos(theta[i])*n_hat[:,0] + np.sin(theta[i])*n_hat[:,1]
+
+    def calculate_wall_distance_alignment(self, r_tank = 55.5):
+
+        x = [ [] for i in range(self.n_fish()) ]
+        y = [ [] for i in range(self.n_fish()) ]
+        e = [ [] for i in range(self.n_fish()) ]
+        for i_fish in range(self.n_fish()):
+            x[i_fish] = np.array(self.fish[i_fish].df['x'].tolist())
+            y[i_fish] = np.array(self.fish[i_fish].df['y'].tolist())
+            e[i_fish] = np.array(self.fish[i_fish].df['theta'].tolist())
+        x = np.array(x)
+        y = np.array(y)
+        e = np.array(e)
+
+        _diw_miw = [ [] for i in range(self.n_fish()) ]
+        for i_fish in range(self.n_fish()):
+            diw = self.wall_distance(i_fish, x, y, r_tank = r_tank)
+            miw = self.wall_alignment(i_fish, x, y, thetas)
+            _diw_miw[i_fish] = np.column_stack((diw, miw))
+
+        _diw_miw = np.array(_diw_miw)
+        self.diw_miw = []
+        for i_fish in range(self.n_fish()):
+            self.fish[i_fish].set_diw_miw(_diw_miw[i_fish])
+            self.diw_miw.extend(_diw_miw[i_fish])
+        self.diw_miw = np.array(self.diw_miw)
+
+    def collect_wall_distance_alignment(self, frame_range = None, 
+                                   ocut = False, vcut = False, wcut = False):
+        self.diw_miw = []
+        for i_fish in range(self.n_fish()):
+            _diw_miw = self.fish[i_fish].get_diw_miw(frame_range, ocut, vcut, wcut)
+            self.diw_miw.extend(_diw_miw)
+        self.diw_miw = np.array(self.diw_miw)
+
 
     def calculate_distance_alignment(self):
         _dij_mij = [ [ [] for j in range(self.fish[i].n_frames()) ] for i in range(self.n_fish()) ]

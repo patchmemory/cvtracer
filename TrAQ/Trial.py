@@ -42,7 +42,7 @@ class Trial:
             self.tank        = Tank(self.fvideo_raw, tank_radius)
             self.tank.locate()
             self.tank.r_cm   = tank_radius
-            self.group       = Group(int(n), t)        
+            self.group       = Group(int(n), t) 
             self.fps         = fps
             self.frame_start = t_start * fps
             self.frame_end   = t_end   * fps
@@ -115,6 +115,7 @@ class Trial:
 #            sys.stdout.write("\n        Unable to load Trial from %s \n" % self.fname)
 #            sys.stdout.flush()
 #            return False
+
 
     def reorganize_files(self):
         vfile = self.fvideo_raw.split('/')[-1]
@@ -307,6 +308,15 @@ class Trial:
         sys.stdout.write("             %s \n" % self.fname)
         sys.stdout.flush()
 
+    def calculate_tank_crossing(self):           
+        sys.stdout.write("\n       Calculating tank crossings...\n")
+        sys.stdout.flush()
+        self.group.calculate_tank_crossing(self.tank.r_cm)
+        self.save()          
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... tank crossings calculated for Trial and saved in\n")
+        sys.stdout.write("             %s \n" % self.fname)
+        sys.stdout.flush()
 
     def calculate_pairwise(self):
         sys.stdout.write("\n")

@@ -136,8 +136,35 @@ class Individual:
         self.df['al'] = - np.sin(self.df.etheta)*self.df.ax + np.cos(self.df.etheta)*self.df.ay
 
 
+    def calculate_tank_crossing(self, R):
+        self.df['tc'] = np.sqrt( self.df.x**2 + self.df.y**2 ) < R/np.sqrt(2)
+
+
     def set_distance_nn(self, d_nn):
         self.df['d_nn'] = d_nn.tolist()
+
+
+    def set_diw_miw(self, diw_miw):
+        self.df['diw'] = diw_miw[:,0].tolist()
+        self.df['miw'] = diw_miw[:,1].tolist()
+
+    def get_diw_miw(self, frame_range = None, 
+                    ocut = False, vcut = False, wcut = False):
+        
+        diw_miw = []
+        if 'diw_miw' not in self.df.columns:
+            print("\n  'diw_miw' not found in DataFrame. Skipping statistics...\n")
+        else:                
+            _diw = np.array(self.df['diw'])
+            _miw = np.array(self.df['miw'])
+            _diw_miw = np.column_stack((_diw,_miw))
+            print(" Shape before cuts: ", _diw_miw.shape)
+            _diw_miw = self.apply_cuts(_diw_miw, frame_range = frame_range, 
+                                       ocut = ocut, vcut = vcut, wcut = wcut )                
+            print(" Shape after cuts: ", _diw_miw.shape)
+            diw_miw = _diw_miw.tolist()
+
+        return diw_miw
 
 
     def set_dij_mij(self, dij_mij):
