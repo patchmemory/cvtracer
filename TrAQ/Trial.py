@@ -318,6 +318,41 @@ class Trial:
         sys.stdout.write("             %s \n" % self.fname)
         sys.stdout.flush()
 
+
+    def calculate_wall_distance_orientation(self):
+        sys.stdout.write("\n")
+        sys.stdout.write("       Calculating wall distance and alignment across group... \n")
+        self.group.calculate_wall_distance_orientation()
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
+
+    def gather_wall_distance_orientation(self, frame_range = None, 
+                           ocut = False, vcut = False, wcut = False,
+                           tag = None):
+        sys.stdout.write("       Collecting wall info according to cuts... \n")
+        self.group.collect_wall_distance_orientation(frame_range = frame_range, 
+                                           ocut = ocut, vcut = vcut, wcut = wcut)
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
+        self.plot_wall_distance_orientation(tag)
+
+    def calculate_wall_distance_alignment(self):
+        sys.stdout.write("\n")
+        sys.stdout.write("       Calculating wall distance and orientation across group... \n")
+        self.group.calculate_wall_distance_alignment()
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
+        
+    def gather_wall_distance_alignment(self, frame_range = None, 
+                           ocut = False, vcut = False, wcut = False,
+                           tag = None):
+        sys.stdout.write("       Collecting wall info according to cuts... \n")
+        self.group.collect_wall_distance_alignment(frame_range = frame_range, 
+                                           ocut = ocut, vcut = vcut, wcut = wcut)
+        sys.stdout.write("\n")
+        sys.stdout.write("       ... done \n")
+        self.plot_wall_distance_alignment(tag)
+
     def calculate_pairwise(self):
         sys.stdout.write("\n")
         sys.stdout.write("       Calculating pair distance and alignment across group... \n")
@@ -334,7 +369,6 @@ class Trial:
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
         self.plot_distance_alignment(tag)
-
         
 
 
@@ -399,6 +433,41 @@ class Trial:
             plt.show()
         plt.clf()
   
+    def plot_wall_distance_orientation(self, tag = None, save = True):
+        my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
+        my_cmap.set_bad(my_cmap.colors[0])
+        
+        plt.ylabel(r"Orientation ($\theta_{i,w}$)")
+        plt.xlabel("Distance (cm)")
+        plt.hist2d( self.group.dw_thetaw[:,0], self.group.dw_thetaw[:,1],
+                    bins=100, range=[[0,self.tank.r_cm],[-np.pi,np.pi]], 
+                    norm = colors.LogNorm(), cmap = my_cmap )
+        plt.colorbar()
+        plt.tight_layout()
+        if save:
+            fig_name = "%s/dw_thetaw_%s.png" % (self.fdir, tag)
+            plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()      
+
+    def plot_wall_distance_alignment(self, tag = None, save = True):
+        my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
+        my_cmap.set_bad(my_cmap.colors[0])
+        
+        plt.ylabel(r"Alignment ($\cos\theta_{ij}$)")
+        plt.xlabel("Distance (cm)")
+        plt.hist2d( self.group.diw_miw[:,0], self.group.diw_miw[:,1],
+                    bins=100, range=[[0,self.tank.r_cm],[-1,1]], 
+                    norm = colors.LogNorm(), cmap = my_cmap )
+        plt.colorbar()
+        plt.tight_layout()
+        if save:
+            fig_name = "%s/diw_miw_%s.png" % (self.fdir, tag)
+            plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()      
 
     def plot_distance_alignment(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))

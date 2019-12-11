@@ -14,22 +14,30 @@ def aspect_ratio(x_range,y_range):
     ylen = y_range[1] - y_range[0]
     return xlen/ylen
 
-def filter_dw_thetaw(dw_thetaw_arr):
-    cut1 = dw_thetaw_arr[:,1] !=  1 
-    cut2 = dw_thetaw_arr[:,1] != -1 
-    cut3 = dw_thetaw_arr[:,0] !=  0
+def collect_diw_miw_trial(diw_miw):
+    diw_miw_list = []
+    for fish in diw_miw:
+        for frame in fish:
+            for neighbor in frame:
+                diw_miw_list.append(neighbor)
+    return diw_miw_list
+
+def filter_diw_miw(diw_miw_arr):
+    cut1 = diw_miw_arr[:,1] !=  1 
+    cut2 = diw_miw_arr[:,1] != -1 
+    cut3 = diw_miw_arr[:,0] !=  0
     cuts = cut1 & cut2 & cut3 
-    dw_thetaw_cut = dw_thetaw_arr[cuts]
-    frac_cut = (len(dw_thetaw_arr)-len(dw_thetaw_cut))/len(dw_thetaw_arr)
-    return dw_thetaw_cut, frac_cut 
+    diw_miw_cut = diw_miw_arr[cuts]
+    frac_cut = (len(diw_miw_arr)-len(diw_miw_cut))/len(diw_miw_arr)
+    return diw_miw_cut, frac_cut 
 
 
-def calculate_dw_thetaw_all_trials_in_set(t,n):
+def calculate_diw_miw_all_trials_in_set(t,n):
     for trial in arc.trial_list(t,n):
         try:
-            trial.calculate_wall_distance_orientation()
+            trial.calculate_wall_coordinates()
         except:
-            print("  Issue calculating wall distance and orientation for trial, ")
+            print("  Issue calculating wall coordinates for trial, ")
             trial.print_info()
 
 
@@ -39,11 +47,11 @@ def combine_all_trials_in_set(t,n,tag):
     frame_range = [10*60*fps, 30*60*fps]
     for trial in arc.trial_list(t,n):
         try:
-            trial.gather_wall_distance_orientation(frame_range, 
+            trial.gather_wall_coordinates(frame_range, 
                     ocut = True, vcut = True, wcut = True, tag = tag)
-            #trial.group.collect_wall_distance_orientation(frame_range, ocut = True, 
+            #trial.group.collect_wall_distance_alignment(frame_range, ocut = True, 
             #                                       vcut = True, wcut = True)
-            dm.extend(trial.group.dw_thetaw)
+            dm.extend(trial.group.diw_miw)
         except:
             print("  Trial data not accessible... ")
             trial.print_info()
@@ -62,10 +70,9 @@ def collect_all_sets(ts,ns,tag,calc=False):
             print("  Collecting results for %s %2i" % (t,n))
             k = set_key(t,n)
             if calc:
-                calculate_dw_thetaw_all_trials_in_set(t,n)
+                calculate_diw_miw_all_trials_in_set(t,n)
             #d_dm[k], d_fc[k] = combine_all_trials_in_set(t,n)
             d_dm[k] = combine_all_trials_in_set(t,n,tag)
-            print("d_dm[k]",d_dm[k])
     #return d_dm, d_fc
     return d_dm
 
@@ -83,14 +90,14 @@ def plot_set(d_dm, t, n, tag, save = False):
     plt.colorbar()
     plt.tight_layout()
     if save:
-        plt.savefig("results/%s_%02i_dw_thetaw_%s.png" % (t,n,tag))
+        plt.savefig("results/%s_%02i_diw_miw_%s.png" % (t,n,tag))
     else:
         plt.show()
     plt.clf()
 
 
-def figure_wall_distance_orientation(d_dm, ts, ns, tag, d_bins = 100, m_bins = 100, 
-                            d_range = [0, 55.5], m_range = [0,np.pi], save = False):
+def figure_wall_distance_alignment(d_dm, ts, ns, tag, d_bins = 100, m_bins = 100, 
+                            d_range = [0, 55.5], m_range = [-1,1], save = False):
     #fig = plt.figure(figsize=(5*len(ns),5*len(ts)))
     plt.rcParams.update({'font.size': 18})
 
@@ -110,8 +117,7 @@ def figure_wall_distance_orientation(d_dm, ts, ns, tag, d_bins = 100, m_bins = 1
             if i == len(ts) - 1:
                 grid[i_grid].set_xlabel("Distance (cm)")
             if j == 0:
-                grid[i_grid].set_ylabel(r"Orientation ($\theta_{i,w}$)")
-                #grid[i_grid].set_ylabel(r"Alignment ($\cos2\theta_{i,w}$)")
+                grid[i_grid].set_ylabel(r"Alignment ($\cos\theta_{ij}$)")
                 grid[i_grid].set_yticks(np.linspace(m_range[0],m_range[1],5))
 
             print("Binning %s..." %k) 
@@ -156,7 +162,7 @@ def figure_wall_distance_orientation(d_dm, ts, ns, tag, d_bins = 100, m_bins = 1
     cb.set_label("normalized count", rotation=270, labelpad=20)
 
     if save:
-        plt.savefig("results/figure_dw_thetaw_%s.png" % (tag))
+        plt.savefig("results/figure_diw_miw_%s.png" % (tag))
     else:
         plt.show()
 
@@ -172,11 +178,11 @@ tag = "t10to30_o0.0_v001.0to100.0_w-25.0to025.0_nbf3"
 #tag = "t10to30_o0.0_v000.0to100.0_w-25.0to025.0_nbf3"
 fname = "analysis_%s.arc" % tag
 arc.load(fname)
-calc=True
+calc=False
 
 
 ts = [ "SF", "Pa", "Ti", "Mo" ]
-#ts = [ "SF", "Pa" ]
+ts = [ "SF", "Pa" ]
 ns = [ 1, 2, 5, 10 ]
 
 import pickle
@@ -198,5 +204,5 @@ for key in d_dm:
 
 plot_all_sets(d_dm,ts,ns,tag) 
 
-figure_wall_distance_orientation(d_dm, ts, ns, tag, save = True)
+figure_wall_distance_alignment(d_dm, ts, ns, tag, save = True)
 print("figure printed")

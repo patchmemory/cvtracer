@@ -83,6 +83,12 @@ class Individual:
         self.df['dwall'] = self.df.apply(lambda row: tank_radius - 
                            ( np.sqrt(pow(row.x,2) + pow(row.y,2)) ), axis=1)
 
+    def calculate_theta_wall(self):
+        r_pos = np.sqrt(self.df.x**2 + self.df.y**2)
+        n_hat = np.column_stack((self.df.x/r_pos, self.df.y/r_pos))
+        self.df['theta_wall'] = np.arccos(np.cos(self.df.theta)*n_hat[:,0] + np.sin(self.df.theta)*n_hat[:,1])
+        print(self.df.theta_wall)
+
 
     def calculate_velocity(self,fps):
         if 'vx' not in self.df.columns or 'vy' not in self.df.columns:
@@ -152,8 +158,10 @@ class Individual:
                     ocut = False, vcut = False, wcut = False):
         
         diw_miw = []
-        if 'diw_miw' not in self.df.columns:
-            print("\n  'diw_miw' not found in DataFrame. Skipping statistics...\n")
+        if 'diw' not in self.df.columns:
+            print("\n  'diw' not found in DataFrame. Skipping statistics...\n")
+        elif 'miw' not in self.df.columns:
+            print("\n  'miw' not found in DataFrame. Skipping statistics...\n")
         else:                
             _diw = np.array(self.df['diw'])
             _miw = np.array(self.df['miw'])
@@ -165,6 +173,27 @@ class Individual:
             diw_miw = _diw_miw.tolist()
 
         return diw_miw
+
+    def get_dw_thetaw(self, frame_range = None, 
+                    ocut = False, vcut = False, wcut = False):
+        
+        dw_thetaw = []
+        if 'dwall' not in self.df.columns:
+            print("\n  'dwall' not found in DataFrame. Skipping statistics...\n")
+        elif 'theta_wall' not in self.df.columns:
+            print("\n  'theta_wall' not found in DataFrame. Skipping statistics...\n")
+        else:                
+            _dw = np.array(self.df['dwall'])
+            _thetaw = np.array(self.df['theta_wall'])
+            _dw_thetaw = np.column_stack((_dw,_thetaw))
+            print(" Shape before cuts: ", _dw_thetaw.shape)
+            _dw_thetaw = self.apply_cuts(_dw_thetaw, frame_range = frame_range, 
+                                       ocut = ocut, vcut = vcut, wcut = wcut )                
+            print(" Shape after cuts: ", _dw_thetaw.shape)
+            dw_thetaw = _dw_thetaw.tolist()
+
+        return dw_thetaw
+
 
 
     def set_dij_mij(self, dij_mij):

@@ -198,6 +198,29 @@ class Group:
         n_hat = np.column_stack((x[i]/r_pos, y[i]/r_pos))
         return np.cos(theta[i])*n_hat[:,0] + np.sin(theta[i])*n_hat[:,1]
 
+    def calculate_wall_distance_orientation(self, r_tank = 55.5):
+        _dw_thetaw = [ [] for i in range(self.n_fish()) ]
+        for i_fish in range(self.n_fish()):
+            dwall = np.array(self.fish[i_fish].df.dwall.tolist())
+            self.fish[i_fish].calculate_theta_wall()
+            theta_wall = np.array(self.fish[i_fish].df.theta_wall.tolist())
+            _dw_thetaw[i_fish] = np.column_stack((dwall, theta_wall))
+
+        _dw_thetaw = np.array(_dw_thetaw)
+        self.dw_thetaw = []
+        for i_fish in range(self.n_fish()):
+            #self.fish[i_fish].set_diw_miw(_diw_miw[i_fish])
+            self.dw_thetaw.extend(_dw_thetaw[i_fish])
+        self.dw_thetaw = np.array(self.dw_thetaw)
+
+    def collect_wall_distance_orientation(self, frame_range = None, 
+                                   ocut = False, vcut = False, wcut = False):
+        self.dw_thetaw = []
+        for i_fish in range(self.n_fish()):
+            _dw_thetaw = self.fish[i_fish].get_dw_thetaw(frame_range, ocut, vcut, wcut)
+            self.dw_thetaw.extend(_dw_thetaw)
+        self.dw_thetaw = np.array(self.dw_thetaw)
+
     def calculate_wall_distance_alignment(self, r_tank = 55.5):
 
         x = [ [] for i in range(self.n_fish()) ]
@@ -214,7 +237,7 @@ class Group:
         _diw_miw = [ [] for i in range(self.n_fish()) ]
         for i_fish in range(self.n_fish()):
             diw = self.wall_distance(i_fish, x, y, r_tank = r_tank)
-            miw = self.wall_alignment(i_fish, x, y, thetas)
+            miw = self.wall_alignment(i_fish, x, y, e)
             _diw_miw[i_fish] = np.column_stack((diw, miw))
 
         _diw_miw = np.array(_diw_miw)
