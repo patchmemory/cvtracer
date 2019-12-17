@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+import sys
+cvhome="/disk1/astyanax-mexicanus/cv-tracer"
+sys.path.insert(0, cvhome)
 import os
 import copy
 import numpy as np

@@ -1,4 +1,7 @@
 from Analysis.Archive import Archive
+import sys
+cvhome="/disk1/astyanax-mexicanus/cv-tracer"
+sys.path.insert(0, cvhome)
 import numpy as np
 import matplotlib.pyplot as plt
 
