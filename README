@@ -10,16 +10,15 @@
 #                                                                             #
 ###############################################################################
 
-  In the cv-tracer package, one will fild the modules TrAQ, Analysis, and GUI
+  In the cv-tracer package, one will find the modules TrAQ, Analysis, and GUI
   These three modules provide necessary tools for different stages of tracking
   birds-eye video of fish swimming in a tank, reviewing the results alongside
   video to check for errors, and analyzing the results across trials. 
 
-  Scripts for executing all of these tasks can be found in the home directory
-  along with backups stored in the 
-  
-    scripts/ 
-  
+  Scripts for executing all tasks for tracking can be found in 
+
+    scripts/track
+
   subdirectory of each base module (e.g. TrAQ/scripts, Analysis/scripts). 
 
   This document provides a basic overview of how to use this software and is
