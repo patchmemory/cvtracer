@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 import os
-cv-home="/disk1/astyanax-mexicanus/cv-tracer"
-sys.path.insert(0, cv-home)
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -257,6 +255,9 @@ arc = Archive()
 tag = "t10to30_o0.0_v001.0to100.0_w-25.0to025.0_nbf3"
 fname = "analysis_%s.arc" % tag
 arc.load(fname)
+print(arc.trials)
+
+exit()
 
 ts = [ "SF", "Pa", "Ti", "Mo" ]
 ns = [ 1, 2, 5, 10 ]
