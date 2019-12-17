@@ -4,9 +4,12 @@
 #  >  cd cv-tracer
 #  >  ./scripts/init.sh
 
-echo "Modifying home path for the following script files... "
+echo "  Updating home path to "
+echo "    `pwd`"
+echo "  for the following script files... "
 for file in scripts/*/*
 do 
-    echo $file
+    echo "    $file"
     sed -i "/cvhome=/c\cvhome=\"`pwd`\"" $file
 done
+echo "  done."
