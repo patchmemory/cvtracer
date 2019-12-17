@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import os
-cv-home="/disk1/astyanax-mexicanus/cv-tracer"
-sys.path.insert(0, cv-home)
+import sys
+cvhome="/disk1/astyanax-mexicanus/cv-tracer"
+sys.path.insert(0, cvhome)
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +32,7 @@ def collect_all_sets(arc,ts,ns,tag,calc=False):
     return d_dm
 
 # Run trial-specific function from within Archive object
-def calculate_dw_thetaw_all_trials_in_set(t,n):
+def calculate_dw_thetaw_all_trials_in_set(arc,t,n):
     for trial in arc.trial_list(t,n):
         try:
             trial.calculate_wall_distance_orientation()
@@ -249,10 +250,18 @@ def aspect_ratio(x_range,y_range):
     xlen = x_range[1] - x_range[0]
     ylen = y_range[1] - y_range[0]
     return xlen/ylen
+
+def dhist_dx(binc,mean,err):
+    _binc = ( binc[1:] + binc[:-1] ) / 2 
+    dx = binc[1:] - binc[:-1]
+    dmean = mean[1:] - mean[:-1]
+    derr = np.sqrt(err[1:]**2 + err[:-1]**2)
+    return _binc, dmean/dx, derr
 #
 ##########################################################################
 
 calc = True # set false to pick up from previous work 
+calc = False # set false to pick up from previous work 
 arc = Archive()
 tag = "t10to30_o0.0_v001.0to100.0_w-25.0to025.0_nbf3"
 fname = "analysis_%s.arc" % tag
