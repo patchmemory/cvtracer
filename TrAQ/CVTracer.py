@@ -378,14 +378,20 @@ class CVTracer:
     def predict_next(self):
         prediction = self.coord_pre.copy()
         for i in range(len(self.coord_pre)):
-            prediction[i][0] = ( self.trail[-1][i][0] 
-                                    + ( 3*self.trail[-1][i][0] 
-                                      - 2*self.trail[-2][i][0] 
-                                      -   self.trail[-3][i][0] ) / 4. )
-            prediction[i][1] = ( self.trail[-1][i][1] 
-                                    + ( 3*self.trail[-1][i][1] 
-                                      - 2*self.trail[-2][i][1] 
-                                      -   self.trail[-3][i][1] ) / 4. )
+            if len(self.trail) > 2:
+                prediction[i][0] = ( self.trail[-1][i][0] 
+                                        + ( 3*self.trail[-1][i][0] 
+                                          - 2*self.trail[-2][i][0] 
+                                          -   self.trail[-3][i][0] ) / 4. )
+                prediction[i][1] = ( self.trail[-1][i][1] 
+                                        + ( 3*self.trail[-1][i][1] 
+                                          - 2*self.trail[-2][i][1] 
+                                          -   self.trail[-3][i][1] ) / 4. )
+            else:
+                prediction[i][0] = ( 2*self.trail[-1][i][0]   
+                                     - self.trail[-2][i][0] )
+                prediction[i][1] = ( 2*self.trail[-1][i][1]                                    
+                                     - self.trail[-2][i][1] )
         return prediction
     
     # in the absence of contours, if there is a trail, make a guess based on

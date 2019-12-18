@@ -27,11 +27,11 @@ trial = Trial(args.raw_video)
 #else:
 #    frame_range = None
 ti = 10 * 60 # min to sec
-tf = 30 * 60 # min to sec
+tf = 50 * 60 # min to sec
 frame_range = [ int(ti * trial.fps), int(tf * trial.fps)]
 ocut = 0
 vcut = [1, 100]
-wcut = [-40, 40]
+wcut = [-25, 25]
 
 #trial.group.clear_results()
 
