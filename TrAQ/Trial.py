@@ -98,23 +98,13 @@ class Trial:
             tmp_dict = pickle.load(f)
             f.close()
             self.__dict__.update(tmp_dict) 
-            sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
+            sys.stdout.write("\n        Trial loaded from %s \n" % self.fname)
             sys.stdout.flush()
             return True
-        except: 
+        except:
+            sys.stdout.write("\n        Unable to load Trial from %s \n" % self.fname)
+            sys.stdout.flush()
             return False
-#        try:
-#            f = open(self.fname, 'rb')
-#            tmp_dict = pickle.load(f)
-#            f.close()
-#            self.__dict__.update(tmp_dict) 
-#            sys.stdout.write("\n        Trial object loaded from %s \n" % self.fname)
-#            sys.stdout.flush()
-#            return True
-#        except:
-#            sys.stdout.write("\n        Unable to load Trial from %s \n" % self.fname)
-#            sys.stdout.flush()
-#            return False
 
 
     def reorganize_files(self):
@@ -239,7 +229,14 @@ class Trial:
         self.plot_valid(frame_range = frame_range, tag = tag)
         
         return tag
+        plt.savefig(fig_name)
+        else:
+            plt.show()
+        plt.clf()      
+       
 
+    def plot_valid(self, frame_range = None, tag = None, save = True):
+   
 
 
     ######################################################
@@ -308,6 +305,7 @@ class Trial:
         sys.stdout.write("             %s \n" % self.fname)
         sys.stdout.flush()
 
+
     def calculate_tank_crossing(self):           
         sys.stdout.write("\n       Calculating tank crossings...\n")
         sys.stdout.flush()
@@ -326,6 +324,7 @@ class Trial:
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
 
+
     def gather_wall_distance_orientation(self, frame_range = None, 
                            ocut = False, vcut = False, wcut = False,
                            tag = None):
@@ -336,13 +335,15 @@ class Trial:
         sys.stdout.write("       ... done \n")
         self.plot_wall_distance_orientation(tag)
 
+
     def calculate_wall_distance_alignment(self):
         sys.stdout.write("\n")
         sys.stdout.write("       Calculating wall distance and orientation across group... \n")
         self.group.calculate_wall_distance_alignment()
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
-        
+
+
     def gather_wall_distance_alignment(self, frame_range = None, 
                            ocut = False, vcut = False, wcut = False,
                            tag = None):
@@ -353,12 +354,14 @@ class Trial:
         sys.stdout.write("       ... done \n")
         self.plot_wall_distance_alignment(tag)
 
+
     def calculate_pairwise(self):
         sys.stdout.write("\n")
         sys.stdout.write("       Calculating pair distance and alignment across group... \n")
         self.group.calculate_distance_alignment()
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
+
         
     def gather_pairwise(self, frame_range = None, 
                            ocut = False, vcut = False, wcut = False,
@@ -369,7 +372,6 @@ class Trial:
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
         self.plot_distance_alignment(tag)
-        
 
 
     def calculate_statistics(self, 
@@ -433,6 +435,7 @@ class Trial:
             plt.show()
         plt.clf()
   
+
     def plot_wall_distance_orientation(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
         my_cmap.set_bad(my_cmap.colors[0])
@@ -451,6 +454,7 @@ class Trial:
             plt.show()
         plt.clf()      
 
+
     def plot_wall_distance_alignment(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
         my_cmap.set_bad(my_cmap.colors[0])
@@ -468,6 +472,7 @@ class Trial:
         else:
             plt.show()
         plt.clf()      
+
 
     def plot_distance_alignment(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
@@ -520,4 +525,3 @@ class Trial:
         else:
             plt.show()
         plt.clf()
-
