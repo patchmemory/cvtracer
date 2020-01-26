@@ -17,7 +17,32 @@ class Coordinate:
                    self.theta - theta + 2*np.pi,
                    self.theta - theta - 2*np.pi, key=abs)
 
-    
+def area_circle(r):
+    return np.pi*r**2
+
+def area_shell(r1,r2):
+    return area_circle(r2) - area_circle(r1)
+
+def next_radius(r0,area_shell):
+    return np.sqrt( area_shell/np.pi + r0**2 )
+
+def area_shell_from_bins(r, nbins = 10):
+    return area_circle(r)/nbins
+
+def bin_edges_circular(r, nbins = 10):
+    a_shell = area_shell_from_bins(r, nbins = nbins)
+    edges = [ 0 ] 
+    for i in range(nbins):
+      edges.append(next_radius(edges[-1],a_shell))
+    return np.array(edges)
+
+def bin_edges_centers_circular(nbins, hrange = [0, 55.5]):
+    edges = bin_edges_circular(hrange[1], nbins = nbins)
+    edges = -edges + hrange[1]
+    edges = np.flipud(edges)
+    edges = np.abs(edges)
+    binc = ( edges[1:] + edges[:-1] ) / 2
+    return edges, binc
 
 def mean_and_err(l):
     l = np.array(l)

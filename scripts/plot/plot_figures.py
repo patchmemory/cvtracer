@@ -35,13 +35,20 @@ def load_stats(ts,ns,vals,stats,tag):
 
 
 def plot_hist_t_compare(h,ts,n,val,tag, t_name, val_name, save=True,
-                        vrange = None, logs = False):
+                        vrange = None, logs = False, omega_weighted = False):
     plt.title("%s across type for groups of %i" % (val_name[val],n))
     for t in ts:
+        if omega_weighted:
+            weight = h[hkey(t,n,val)][:,0]
+        else:
+            weight = np.ones_like(h[hkey(t,n,val)][:,0])
+
         plt.fill_between( h[hkey(t,n,val)][:,0],
-                          h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
-                          h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
-                          alpha=0.5, label=t_name[t])
+                  weight*(h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
+                  weight*(h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
+                          alpha=0.5, facecolor = colors[t_color[t]][tc_index], label=t_name[t])
+    if not logs:
+        plt.ylim(bottom=0)
     plt.xlabel(val_name[val])
     plt.legend()
 
@@ -52,24 +59,36 @@ def plot_hist_t_compare(h,ts,n,val,tag, t_name, val_name, save=True,
         plt.yscale('log')
 
     if save:
+        extra = ""
         if logs:
-            plt.savefig("results/%s_n%02i_hist_across_t_log_%s.png" % (val, n, tag) )
-        else:
-            plt.savefig("results/%s_n%02i_hist_across_t_%s.png" % (val, n, tag) )
+            extra += "logs_"
+        if omega_weighted:
+            extra += "weighted_"
+        plt.savefig("results/%s_n%02i_hist_across_t_%s%s.png" % (t, n, extra, tag) )
     else:
         plt.show()
     plt.clf()
 
 
 def plot_hist_n_compare(h,t,ns,val,tag, t_name, val_name, save=True,
-                        vrange = None, logs = False):
+                        vrange = None, logs = False, omega_weighted = False):
+
+
     plt.title("%s of %s" % (val_name[val],t_name[t]) )
+    tc = t_color[t]
     for n in ns:
+        if omega_weighted:
+            weight = h[hkey(t,n,val)][:,0]
+        else:
+            weight = np.ones_like(h[hkey(t,n,val)][:,0])
+
         plt.fill_between( h[hkey(t,n,val)][:,0],
-                          h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
-                          h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
-                          alpha=0.5, label=n )
+                  weight*(h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
+                  weight*(h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
+                          alpha=0.5, facecolor=colors[tc][ns.index(n)], label=n)
     plt.xlabel(val_name[val])
+    if not logs:
+        plt.ylim(bottom=0)
     plt.legend()
 
     if vrange != None:
@@ -79,10 +98,12 @@ def plot_hist_n_compare(h,t,ns,val,tag, t_name, val_name, save=True,
         plt.yscale('log')
 
     if save:
+        extra = ""
         if logs:
-            plt.savefig("results/%s_%s_hist_across_n_log_%s.png" % (t, val, tag) )
-        else:
-            plt.savefig("results/%s_%s_hist_across_n_%s.png" % (t, val, tag) )
+            extra += "logs_"
+        if omega_weighted:
+            extra += "weighted_"
+        plt.savefig("results/%s_%s_hist_across_n_%s%s.png" % (t, val, extra, tag) )
     else:
         plt.show()
     plt.clf()
@@ -96,7 +117,7 @@ def plot_stat(m,ts,val,stat,tag, t_name, val_name, stat_name, save=True):
                       s[skey(t,val,stat)][:,2],
                       fmt = 'o',
                       capsize = 3,
-                      label = t_name[t] )
+                      label = t_name[t], color=colors[t_color[t]][tc_index])
     plt.ylim(bottom=0)
     plt.xlim([0,12])
     plt.xlabel("group size")
@@ -108,8 +129,7 @@ def plot_stat(m,ts,val,stat,tag, t_name, val_name, stat_name, save=True):
     plt.clf()
 
 
-def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_weighted = False):
-    
+def figure_single_fish_compare(h, ts, n, tag, t_name, val_name, save=True, omega_weighted = False):
     left_shift = 0.03
     plt.rcParams.update({'font.size': 14})
     fig, ax = plt.subplots(1,3, figsize=(17,5))
@@ -120,7 +140,7 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_we
         ax[0].fill_between( h[hkey(t,n,val)][:,0],
                             h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
                             h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
-                            alpha=0.5, label=t_name[t])
+                            alpha=0.5, facecolor=colors[t_color[t]][tc_index], label=t_name[t])
     ax[0].set_ylabel("normalized count", fontsize = 16)
     ax[0].set_xlabel(val_name[val], fontsize = 16)
     ax[0].set_xlim(vrange)
@@ -132,7 +152,7 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_we
         ax[1].fill_between( h[hkey(t,n,val)][:,0],
                             h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
                             h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
-                            alpha=0.5, label=t_name[t])
+                            alpha=0.5, facecolor=colors[t_color[t]][tc_index], label=t_name[t])
     ax[1].set_xlabel(val_name[val], fontsize = 16)
     ax[1].set_xlim(vrange)
     ax[1].set_ylim(bottom=0)
@@ -140,16 +160,17 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_we
 
     val = 'omega'
     vrange1 = [0,10]
-    if omega_weighted:
-        weight = h[hkey(t,n,val)][:,0]
-        vrange1 = [0,25]
-    else:
-        weight = np.ones_like(h[hkey(t,n,val)][:,0])
     for t in ts:
+        if omega_weighted:
+            weight = h[hkey(t,n,val)][:,0]
+            vrange1 = [0,25]
+        else:
+            weight = np.ones_like(h[hkey(t,n,val)][:,0])
+
         ax[2].fill_between( h[hkey(t,n,val)][:,0],
                            weight* (h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
                            weight* (h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
-                            alpha=0.5, label=t_name[t])
+                            alpha=0.5, facecolor=colors[t_color[t]][tc_index], label=t_name[t])
     ax[2].set_xlabel(val_name[val], fontsize = 16)
     ax[2].set_xlim(vrange1)
     ax[2].set_ylim(bottom=0)
@@ -160,7 +181,7 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_we
         inset_ax2.fill_between( h[hkey(t,n,val)][:,0],
                            weight* (h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
                            weight* (h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
-                            alpha=0.5, label=t_name[t])
+                            alpha=0.5, facecolor=colors[t_color[t]][tc_index], label=t_name[t])
     inset_ax2.set_xlabel(val_name[val], fontsize = 16)
     inset_ax2.set_xlim(vrange2)
     inset_ax2.set_yscale('log')
@@ -175,7 +196,10 @@ def figure_single_fish_compare(h, ts, tag, t_name, val_name, save=True, omega_we
         axis.set_position(box)
 
     if save:
-        plt.savefig("paper/figures/03/single_fish_compare_%s.png" % tag )
+        extra = ""
+        if omega_weighted:
+            extra += "omega_weighted_"
+        plt.savefig("paper/figures/03/single_fish_compare_%s%s.png" % (extra, tag) )
     else:
         plt.show()
     plt.clf()
@@ -199,13 +223,14 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
     row = 0
     for t in ts:
 
+        tc = t_color[t]
         val = 'dwall'
         vrange = [0,55]
         for n in ns:
             ax[row][0].fill_between( h[hkey(t,n,val)][:,0],
                                      h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
                                      h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
-                                     alpha = 0.5, label=n )
+                                     alpha = 0.5, facecolor=colors[tc][ns.index(n)], label=n)
 
         ax[row][0].set_ylabel("normalized count", fontsize = 16)
         ax[row][0].set_xlabel(val_name[val], fontsize = 16)
@@ -229,7 +254,8 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
             c = cumulative(h[hkey(t,n,val)][:,1])
             cmax = c[-1]
             inset[row][0].plot( h[hkey(t,n,val)][:,0], c/cmax, 
-                                alpha=0.5, linewidth=2, label=n)
+                                alpha=0.5, linewidth=2, label=n, 
+                                    color=colors[tc][ns.index(n)])
         #inset[row][0].set_xlabel(val_name[val], fontsize = 16)
         inset[row][0].set_xlabel("distance to wall", fontsize = 16)
         inset[row][0].set_xlim(vrange)
@@ -245,7 +271,7 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
             ax[row][1].fill_between( h[hkey(t,n,val)][:,0],
                                 h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2], 
                                 h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2], 
-                                alpha=0.5, label=n)
+                                alpha=0.5, facecolor=colors[tc][ns.index(n)], label=n)
         ax[row][1].set_xlabel(val_name[val], fontsize = 16)
         ax[row][1].set_xlim(vrange)
         ax[row][1].set_ylim(bottom=0)
@@ -265,7 +291,8 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
         inset[row][1].errorbar( s[skey(t,val,stat)][:,0], 
                                 s[skey(t,val,stat)][:,1],
                                 s[skey(t,val,stat)][:,2],
-                                fmt = 'o', capsize = 3      )
+                                fmt = 'o', capsize = 3, 
+                                color=colors[tc][ns.index(n)])
         inset[row][1].set_ylabel(r'$\sigma_{speed}$')
         #inset[row][1].errorbar( s[skey(t,val,stat)][:,0], 
         #                        s[skey(t,val,stat)][:,1]*s[skey(t,val,stat)][:,1],
@@ -280,16 +307,16 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
  
         val = 'omega'
         vrange1 = [0,10]
-        if omega_weighted:
-            vrange1 = [0,25]
-            weight = h[hkey(t,n,val)][:,0]
-        else:
-            weight = np.ones_like(h[hkey(t,n,val)][:,0])
         for n in ns:
+            if omega_weighted:
+                vrange1 = [0,25]
+                weight = h[hkey(t,n,val)][:,0]
+            else:
+                weight = np.ones_like(h[hkey(t,n,val)][:,0])
             ax[row][2].fill_between( h[hkey(t,n,val)][:,0],
                                 weight*(h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
                                 weight*(h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
-                                alpha=0.5, label=n)
+                                alpha=0.5, facecolor=colors[tc][ns.index(n)], label=n)
         ax[row][2].set_xlabel(val_name[val], fontsize = 16)
         ax[row][2].set_xlim(vrange1)
         ax[row][2].set_ylim(bottom=0)
@@ -307,7 +334,7 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
             inset[row][2].fill_between( h[hkey(t,n,val)][:,0],
                                 weight*(h[hkey(t,n,val)][:,1] - h[hkey(t,n,val)][:,2]), 
                                 weight*(h[hkey(t,n,val)][:,1] + h[hkey(t,n,val)][:,2]), 
-                                alpha=0.5, label=n)
+                                alpha=0.5, facecolor=colors[tc][ns.index(n)], label=n)
         inset[row][2].set_xlabel(val_name[val], fontsize = 16)
         inset[row][2].set_xlim(vrange2)
         inset[row][2].set_yscale('log')
@@ -332,7 +359,10 @@ def figure_multi_fish_compare(h, s, ts, ns, tag, t_name, val_name, save=True, om
              axis.set_position(box)
 
     if save:
-        plt.savefig("paper/figures/05/multi_fish_compare_%s.png" % tag )
+        extra = ""
+        if omega_weighted:
+            extra += "omega_weighted_"
+        plt.savefig("paper/figures/05/multi_fish_compare_%s%s.png" % (extra, tag) )
     else:
         plt.show()
     plt.clf()
@@ -355,6 +385,27 @@ t_name = { 'SF': "Surface",
            'Mo': "Molino", 
            'Ti': "Tinaja" }
 
+c = [
+     '#fc8d62', # orange
+     '#66c2a5', # teal
+     '#8da0cb', # blue
+     '#e78ac3', # pink
+     '#a6d854'  # neon green
+                ]
+
+t_color = { 'SF': 'blue', 
+            'Pa': 'orange', 
+            'Mo': 'teal', 
+            'Ti': 'pink' }
+
+# lists colors from dark to light
+# used this http://tristen.ca/hcl-picker/#/clh/4/360/530004/F9846A
+colors = { 'blue':   [ '#09232F', '#315C72', '#689BB7', '#AADFFC' ], 
+           'orange': [ '#491702', '#823413', '#BF5428', '#FC7940' ],
+           'teal':   [ '#22332E', '#406E67', '#4FB1A8', '#3AFAF2' ],
+           'pink':   [ '#4C0225', '#8C264E', '#C75778', '#F890A2' ]  }
+tc_index = -2
+
 ns = [ 10, 5, 2, 1 ]
 
 tag = "t10to30_o0.0_v001.0to100.0_w-25.0to025.0_nbf3"
@@ -369,50 +420,80 @@ s = load_stats(ts,ns,vals,stats,tag)
 
 save = True 
 
-om_weight = False 
 # figure 3
-_ts = ['SF', 'Pa']
-#_ts = ['SF', 'Pa', 'Mo', 'Ti']
+#_ts = ['SF', 'Pa']
+_ts = ['SF', 'Pa', 'Mo', 'Ti']
+
 n = 1
-figure_single_fish_compare(h, _ts, tag, t_name, val_name, save, omega_weighted = om_weight)
-figure_multi_fish_compare(h, s, _ts, ns, tag, t_name, val_name, save, omega_weighted = om_weight)
-#plot_hist_t_compare(h,_ts,n,'dwall',tag, t_name, val_name, save)
-#plot_hist_t_compare(h,_ts,n,'speed',tag, t_name, val_name, save)
-#
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#
-#n = 10
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#
-#n = 5
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#
-#n = 2
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#
-#
-## figure 4
-#plot_hist_n_compare(h,'SF',ns,'dwall',tag, t_name, val_name, save)
-#plot_hist_n_compare(h,'Pa',ns,'dwall',tag, t_name, val_name, save)
-#plot_hist_n_compare(h,'SF',ns,'speed',tag, t_name, val_name, save)
-#plot_hist_n_compare(h,'Pa',ns,'speed',tag, t_name, val_name, save)
-#
-#plot_hist_n_compare(h,'SF',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_n_compare(h,'SF',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#plot_hist_n_compare(h,'Pa',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_n_compare(h,'Pa',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#plot_hist_n_compare(h,'Mo',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_n_compare(h,'Mo',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#plot_hist_n_compare(h,'Ti',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
-#plot_hist_n_compare(h,'Ti',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
-#
+plot_hist_t_compare(h,_ts,n,'dwall',tag, t_name, val_name, save)
+plot_hist_t_compare(h,_ts,n,'speed',tag, t_name, val_name, save)
+
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, 
+                        omega_weighted = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, 
+                        omega_weighted = True)
+
+n = 10
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, 
+                        omega_weighted = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, 
+                        omega_weighted = True)
+
+n = 5
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, 
+                        omega_weighted = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, 
+                        omega_weighted = True)
+
+n = 2
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, 
+                        omega_weighted = True)
+plot_hist_t_compare(h,_ts,n,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, 
+                        omega_weighted = True)
+
+
+# figure 4
+plot_hist_n_compare(h,'SF',ns,'dwall',tag, t_name, val_name, save)
+plot_hist_n_compare(h,'Pa',ns,'dwall',tag, t_name, val_name, save)
+plot_hist_n_compare(h,'SF',ns,'speed',tag, t_name, val_name, save)
+plot_hist_n_compare(h,'Pa',ns,'speed',tag, t_name, val_name, save)
+
+
+plot_hist_n_compare(h,'SF',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_n_compare(h,'SF',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+plot_hist_n_compare(h,'Pa',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_n_compare(h,'Pa',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+plot_hist_n_compare(h,'Mo',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_n_compare(h,'Mo',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+plot_hist_n_compare(h,'Ti',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False)
+plot_hist_n_compare(h,'Ti',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True)
+
+plot_hist_n_compare(h,'SF',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, omega_weighted = True)
+plot_hist_n_compare(h,'SF',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, omega_weighted = True)
+plot_hist_n_compare(h,'Pa',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, omega_weighted = True)
+plot_hist_n_compare(h,'Pa',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, omega_weighted = True)
+plot_hist_n_compare(h,'Mo',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, omega_weighted = True)
+plot_hist_n_compare(h,'Mo',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, omega_weighted = True)
+plot_hist_n_compare(h,'Ti',ns,'omega',tag, t_name, val_name, save, vrange = [0,10], logs = False, omega_weighted = True)
+plot_hist_n_compare(h,'Ti',ns,'omega',tag, t_name, val_name, save, vrange = [0,25], logs = True, omega_weighted = True)
+
 ## figure 6 
 #plot_stat(s,ts,'dwall','mean',tag, t_name, val_name, stat_name, save)
 #plot_stat(s,ts,'speed','mean',tag, t_name, val_name, stat_name, save)
 #plot_stat(s,ts,'omega','stdd',tag, t_name, val_name, stat_name, save)
 #plot_stat(s,ts,'omega','kurt',tag, t_name, val_name, stat_name, save)
 
+n = 1
+figure_single_fish_compare(h, _ts, n, tag, t_name, val_name, save, omega_weighted = False)
+figure_single_fish_compare(h, _ts, n, tag, t_name, val_name, save, omega_weighted = True)
+figure_multi_fish_compare(h, s, _ts, ns, tag, t_name, val_name, save, omega_weighted = False)
+figure_multi_fish_compare(h, s, _ts, ns, tag, t_name, val_name, save, omega_weighted = True)

@@ -3,6 +3,10 @@ import numpy as np
 import pandas as pd
 import scipy.stats as spstats
 import itertools
+import sys
+cvhome="/disk1/astyanax-mexicanus/cv-tracer"
+sys.path.insert(0, cvhome)
+import Analysis.Math as ana_math 
 
 
 class Individual:
@@ -427,12 +431,18 @@ class Individual:
                                   val_range = val_range, val_symm = val_symm, 
                                   frame_range = frame_range, 
                                   ocut = ocut, vcut = vcut, wcut = wcut )
-                    
+
             mean = np.nanmean(arr)
             stdd = np.nanstd(arr)
             kurt = spstats.kurtosis(arr,fisher=False)
-            h, bin_edges = np.histogram(arr, bins=nbins, range=val_range, density=True)
-            binc = ( bin_edges[1:] + bin_edges[:-1] ) / 2.
+
+            if val_name == 'dwall':
+                bin_edges, binc = ana_math.bin_edges_centers_circular(nbins, hrange = val_range)
+                h, bin_edges = np.histogram(arr, bins=bin_edges, range=val_range, density=True)
+
+            else:
+                h, bin_edges = np.histogram(arr, bins=nbins, range=val_range, density=True)
+                binc = ( bin_edges[1:] + bin_edges[:-1] ) / 2.
             hist = []
             for i in range(len(binc)):
                 hist.append([binc[i], h[i]])

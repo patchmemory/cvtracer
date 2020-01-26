@@ -124,13 +124,15 @@ class Archive:
 
         
         stat_keys = [ "mean", "stdd", "kurt", "hist" ]
-        stat_list = {}
+        self.stat_list = {}
         
         for val in val_name:
             for stat in stat_keys:
                 key = val + stat
-                stat_list[key] = []        
+                self.stat_list[key] = []        
 
+        inactive = []
+        exceptions = []
         tag = ""
         for trial in self.trials[self.trial_key(t, n)]:
             print("  Working on..." )
@@ -141,38 +143,50 @@ class Archive:
 
                 # test to make sure trial has enough active time
                 if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
-
     
                     trial.calculate_statistics( val_name, val_range, val_symm, val_bins, 
                                             frame_range, ocut, vcut, wcut, tag)
                     for val in val_name:
                         for stat in stat_keys:
                             key = val + stat
-                            stat_list[key].append(trial.group.get_result(val, stat, tag))
+                            self.stat_list[key].append(trial.group.get_result(val, stat, tag))
+                            print(" key, len(stat_list): ", key, len(self.stat_list[key]))
     
                 else:
                     print("\n\n")
                     print("    Warning! Trial has too few valid frames. ")
                     print("             Minimum fraction of valid frames = %5.3f" %
                                                               self.valid_speed_min)
+                    inactive.append(trial.fvideo_raw)
+                    print(" number inactive: ", len(exceptions))
+
             except:
                 print("\n\n")
                 print("    Warning! Issue evaluating trial cuts and/or stats. ")
                 print("             Will skip for now.\n\n")
+                exceptions.append(trial.fvideo_raw)
+                print(" number of exceptions: ", len(exceptions))
 
+        print(" t, n = ", t, n)
+        print("  number of exceptions: ", len(exceptions))
+        print("  number of inactive f: ", len(inactive))
+        print(self.stat_list)
 
         for i in range(len(val_name)):
             val = val_name[i]
             for stat in stat_keys:
+
                 key = val + stat
+                print(" key, len(stat_list): ", key, len(self.stat_list[key]))
+
                 if stat == 'hist':
-                    stat_result = ana_math.mean_and_err_hist(stat_list[key], val_bins[i])
+                    stat_result = ana_math.mean_and_err_hist(self.stat_list[key], val_bins[i])
                 else:
-                    stat_result = ana_math.mean_and_err(stat_list[key])
+                    stat_result = ana_math.mean_and_err(self.stat_list[key])
                     
                 self.store_result(t, n, stat_result, val, stat, tag)
 
-        return tag
+        return tag, exceptions
 
     #################################################
     # plot functions
@@ -246,12 +260,19 @@ class Archive:
             print("  Plotting ")
             trial.print_info()
             try:
+                for cut in cuts:
+                    valid_tmp = trial.group.valid_frame_fraction(frame_range, cut_name = cut)
+                    valid[cut].append(np.nanmean(valid_tmp))
+
                 # test to make sure trial has enough active time
                 if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
-                    for cut in cuts:
-                        valid_tmp = trial.group.valid_frame_fraction(frame_range, 
-                                                                     cut_name = cut)
-                        valid[cut].append(np.nanmean(valid_tmp))
+                    print("\n\n")
+                    print("    Trial has enough active frames for analysis. ")
+                    trial.print_info()
+                    # for cut in cuts:
+                    #     valid_tmp = trial.group.valid_frame_fraction(frame_range, 
+                    #                                                  cut_name = cut)
+                    #     valid[cut].append(np.nanmean(valid_tmp))
                 else:
                     print("\n\n")
                     print("    Warning! Trial has too few valid frames. ")

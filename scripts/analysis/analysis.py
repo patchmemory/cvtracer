@@ -56,9 +56,10 @@ arc.print_sorted()
 ocut = True
 vcut = True
 wcut = True
+all_exceptions = []
 for t in ts:
     for n in ns:
-        tag = arc.calculate_statistics( t, n, val_name = val_names,
+        tag, exceptions = arc.calculate_statistics( t, n, val_name = val_names,
                                         val_range = [ val_range['dwall'], 
                                                       val_range['speed'], 
                                                       val_range['omega'] ],
@@ -69,10 +70,14 @@ for t in ts:
                                         frame_range = frame_range, 
                                         n_buffer_frames = args.n_buffer_frames,
                                         ocut = ocut, vcut = vcut, wcut = wcut )
+        all_exceptions.extend(exceptions)
         for val_name in val_names:
             arc.plot_hist(t, n, val_name, tag)
             arc.plot_hist_each_group(t, n, val_name, tag)
             arc.plot_valid(t, n, frame_range, tag)
 
+for exception in exceptions:
+    print(exception)
+    
 fname = "analysis_%s.arc" % tag
 arc.save(fname)

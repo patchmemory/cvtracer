@@ -5,6 +5,7 @@ sys.path.insert(0, cvhome)
 import argparse
 from TrAQ.Trial import Trial
 from TrAQ.CVTracer import CVTracer
+import numpy as np
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="OpenCV2 Fish Tracker")
@@ -21,6 +22,9 @@ def arg_parse():
     parser.add_argument("-vs","--view_scale", help="to scale size of window for online viewing", default=1.) 
     parser.add_argument("-RGB", help="generate movie in RGB (default is greyscale)", action='store_true')
     parser.add_argument("-GPU", help="use UMat file handling for OpenCV Transparent API", action='store_true') 
+    #parser.add_argument("-AMM", help="switch to mean adaptive method instead of Gaussian", action='store_true') 
+    #parser.add_argument("-TI","--thresh_invert", help="Invert adaptive threshold", action='store_true') 
+    
     return parser.parse_args()
 
 
@@ -30,10 +34,13 @@ trial       = Trial(args.raw_video)
 # initialize a CVTracer
 frame_start = int(args.t_start * trial.fps)
 frame_end   = int(args.t_end   * trial.fps)
-cvt         = CVTracer( trial, frame_start, frame_end, 
-                        args.n_pixel_blur, args.block_size, args.thresh_offset, 
-                        args.min_area, args.max_area, args.trail_length, 
-                        args.RGB, args.online_viewer, args.view_scale, args.GPU ) 
+cvt         = CVTracer( trial, frame_start = frame_start, frame_end = frame_end, 
+                        n_pixel_blur = args.n_pixel_blur, block_size = args.block_size, 
+                        threshold_offset = int(args.thresh_offset), 
+                        min_area = args.min_area, max_area = args.max_area, 
+                        len_trail = args.trail_length, 
+                        RGB = args.RGB, online = args.online_viewer, view_scale = args.view_scale, 
+                        GPU = args.GPU ) 
 
 cvt.print_title()
 cvt.set_frame(frame_start)
@@ -61,3 +68,15 @@ for i_frame in range(cvt.frame_start, cvt.frame_end + 1):
 # put things away
 cvt.release()
 cvt.trial.save()
+
+print(cvt.contour_extent, cvt.contour_solidity)
+extent = np.array(cvt.contour_extent) 
+solidity = np.array(cvt.contour_solidity)
+major_axis = np.array(cvt.contour_major_axis)
+minor_axis = np.array(cvt.contour_minor_axis)
+
+print(extent, solidity)
+np.save("extent.npy",extent)
+np.save("solidity.npy",solidity)
+np.save("major.npy",major_axis)
+np.save("minor.npy",minor_axis)

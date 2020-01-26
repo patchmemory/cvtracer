@@ -16,16 +16,15 @@ class CVTracer:
     def __init__(self, trial, frame_start = 0, frame_end = -1, 
                  n_pixel_blur = 3, block_size = 15, threshold_offset = 13, 
                  min_area = 20, max_area = 400, len_trail = 3,
-                 RGB = False, online = False, view_scale = 1, GPU = False ):
-        
-        self.trial          = trial
+                 RGB = False, online = False, view_scale = 1, GPU = False,
+                 adaptiveMethod = 'gaussian', threshType = 'inv' ):
 
-        
+        self.trial          = trial
         self.fvideo_in      = trial.fvideo_raw
         self.fvideo_ext     = "mp4"
         self.fvideo_out     = os.path.abspath("%s/traced.mp4" % trial.fdir)
         trial.fvideo_out    = self.fvideo_out
-        
+
         # initialize video playback details
         self.view_scale     = view_scale
         self.RGB            = RGB
@@ -42,12 +41,26 @@ class CVTracer:
         self.frame_end      = frame_end
         self.fps            = trial.fps
         self.init_video_capture()
-        
+
         # initialize contour working variables
         self.n_pix_avg      = n_pixel_blur
         self.thresh         = []
         self.block_size     = block_size
         self.offset         = threshold_offset
+        print(threshold_offset)
+        self.threshMax      = 100
+        if adaptiveMethod == 'gaussian':
+            print("Using Gaussian Adaptive Threshold")
+            self.adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C
+        else:
+            print("Using Mean Adaptive Threshold with [%i, 0]" % self.threshMax)
+            self.adaptiveMethod = cv2.ADAPTIVE_THRESH_MEAN_C
+        if threshType == 'inv':
+            print("Using Inverted Binary Threshold with [0, %i]." % self.threshMax)
+            self.threshType     = cv2.THRESH_BINARY_INV
+        else:
+            print("Using Non-Inverted Binary Threshold")
+            self.threshType     = cv2.THRESH_BINARY
         self.min_area       = min_area
         self.max_area       = max_area
         self.contours       = []
@@ -61,11 +74,15 @@ class CVTracer:
         self.ind_pre_now    = []
         self.trail          = []
         self.len_trail      = len_trail
-        
+        self.contour_extent = []
+        self.contour_solidity = []
+        self.contour_major_axis = []
+        self.contour_minor_axis = []
+
+
         # choose whether to randomize or preset color list,
         #     (not necessary if running grayscale)
-        self.preset_color_list()
-        
+        self.preset_color_list()        
         
         
     def preset_color_list(self):
@@ -239,14 +256,10 @@ class CVTracer:
 
     def detect_contours(self):
         self.threshold_detect()
-        # find all contours 
-#        image, self.contours, hierarchy = cv2.findContours( self.thresh, 
-#                                                     cv2.RETR_TREE, 
-#                                                     cv2.CHAIN_APPROX_SIMPLE )
-
+        # Note the [-2:] to specify the last two fields regardless of version
         self.contours, hierarchy = cv2.findContours( self.thresh, 
                                                      cv2.RETR_TREE, 
-                                                     cv2.CHAIN_APPROX_SIMPLE )
+                                                     cv2.CHAIN_APPROX_SIMPLE )[-2:]
 
         # test found contours against area constraints
         i = 0
@@ -258,14 +271,14 @@ class CVTracer:
                 i += 1
 
 
+
     def threshold_detect(self, hist = False):
         # blur and current image for smoother contours
         blur = cv2.GaussianBlur(self.frame, (self.n_pix_avg, self.n_pix_avg), 0)
-        #blur = cv2.blur(frame, (n_pix_avg,n_pix_avg))
        
         # convert to grayscale
         gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
-    
+
         if hist:
             plt.title("Raw image grayscale histogram")
             plt.hist(self.frame.ravel()[self.frame.ravel() > 0],256)
@@ -280,21 +293,15 @@ class CVTracer:
             plt.hist(gray.ravel()[gray.ravel() > 0],256)
             plt.show()
     
-        # calculate thresholds, more info:
-        #   
+        # calculate adaptive threshold using cv2
+        #   more info:
+        #       https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html
         self.thresh = cv2.adaptiveThreshold( gray, 
-                                             160, 
-                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                             cv2.THRESH_BINARY_INV,
-                                             self.block_size, 
-                                             self.offset )
-       # self.thresh = cv2.adaptiveThreshold( gray, 
-       #                                      160, 
-       #                                      cv2.ADAPTIVE_THRESH_MEAN_C, 
-       #                                      cv2.THRESH_BINARY_INV,
-       #                                      self.block_size, 
-       #                                      self.offset )
-        # NOTE: adaptiveThreshold(..., 160, ...) is ad-hoc following histograms
+                                             maxValue = self.threshMax, 
+                                             adaptiveMethod = self.adaptiveMethod,
+                                             thresholdType = self.threshType,
+                                             blockSize = self.block_size, 
+                                             C = self.offset )
     
     
     def analyze_contours(self):
@@ -316,7 +323,17 @@ class CVTracer:
             rx = mu20 - mu02
             theta = 0.5 * np.arctan2(ry, rx)
             self.coord_now.append([cx, cy, theta])
-        
+
+            if len(contour) > 4:
+                area = cv2.contourArea(contour)
+                x,y,w,h = cv2.boundingRect(contour)
+                rect_area = w*h
+                hull_area = cv2.contourArea(cv2.convexHull(contour))
+                (x,y),(ellax_minor,ellax_major), angle = cv2.fitEllipse(contour)
+                self.contour_extent.append(float(area)/rect_area)
+                self.contour_solidity.append(float(area)/hull_area)
+                self.contour_major_axis.append(float(ellax_major))
+                self.contour_minor_axis.append(float(ellax_minor))
         
     def correct_theta(self):
         if len(self.trail) < 1:
@@ -411,12 +428,12 @@ class CVTracer:
     def update_trial(self):
         tstamp = 1.*self.frame_num / self.fps
         self.trial.group.add_entry(tstamp, self.coord_now)
-    
+
+
     # this is the main algorithm the tracer follows when trying 
     # to associate individuals identified in this frame with 
     # those identified in the previous frame/s
     def connect_frames(self):
-
         # for initial frames, make "educated guesses" to at 
         # least get the tracking startedstarted
         if self.tracked_frames() < self.len_trail:
@@ -586,6 +603,7 @@ class CVTracer:
         else:
             cv2.circle(self.frame, (int(tank.row_c), int(tank.col_c)), int(tank.r),
                        0, thickness=7)    
+
 
     def draw_contour_repeat(self):
         if self.RGB:

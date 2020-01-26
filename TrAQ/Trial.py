@@ -227,16 +227,7 @@ class Trial:
         self.cuts_stats = { 'mean': mean, 'err': err }
         tag = self.generate_tag(frame_range, n_buffer_frames, ocut, vcut, wcut)
         self.plot_valid(frame_range = frame_range, tag = tag)
-        
         return tag
-        plt.savefig(fig_name)
-        else:
-            plt.show()
-        plt.clf()      
-       
-
-    def plot_valid(self, frame_range = None, tag = None, save = True):
-   
 
 
     ######################################################
