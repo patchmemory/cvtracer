@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys
-cvhome="/disk1/astyanax-mexicanus/cv-tracer"
+cvhome="/home/patch/Code/cvtracer"
 sys.path.insert(0, cvhome)
 import argparse
 from TrAQ.Trial import Trial

@@ -1,0 +1,1 @@
+argparse cv2 matplotlib mpl_toolkits numpy pandas pickle PyQt5 pyqtgraph scipy scipy sklearn

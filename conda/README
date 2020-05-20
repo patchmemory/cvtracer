@@ -1,0 +1,2 @@
+run the following to create the conda environment:
+> conda env create -f cv-tracer.yml

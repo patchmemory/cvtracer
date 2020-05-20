@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-cvhome="/disk1/astyanax-mexicanus/cv-tracer"
+cvhome="/home/patch/Code/cvtracer"
 sys.path.insert(0, cvhome)
 import matplotlib.pyplot as plt
 from Analysis.Archive import Archive
