@@ -1,2 +1,8 @@
 run the following to create the conda environment:
-> conda env create -f cv-tracer.yml
+> conda env create -f cvtracer.yml
+
+and then to activate run
+> conda activate cvtracer
+
+and to deactive run
+> conda deactivate
