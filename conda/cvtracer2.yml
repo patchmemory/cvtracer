@@ -1,0 +1,21 @@
+name: cvtracer
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - numpy
+  - pip
+  - libopencv
+  - opencv
+  - py-opencv
+  - jupyter
+  - pip:
+    - argparse
+    - matplotlib
+    - pandas
+    - pyqt5
+    - pyqtgraph
+    - scikit-learn
+    - scipy
+    - sklearn
+    - threadpoolctl
