@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import cv2
 import pickle
+import os
 
 
 class Tank:
@@ -16,8 +17,9 @@ class Tank:
         self.found   = False
         self.frame   = None
 
-        self.fvideo  = fvideo
-        self.fname = '/'.join(self.fvideo.split('/')[0:-1]) + "/tank.pik"
+        self.fvideo  = os.path.abspath(fvideo)
+        self.fpath = os.path.split(fvideo)[0]
+        self.fname = os.path.join(self.fpath,"tank.pik")
 
 
     def print_info(self):
@@ -35,7 +37,7 @@ class Tank:
 
     def save(self, fname = None):
         if fname != None:
-            self.fname = fname
+            self.fname = os.path.abspath(fname)
         f = open(self.fname, 'wb')
         pickle.dump(self.__dict__, f, protocol = 3)
         sys.stdout.write("\n        Tank object saved as %s \n" % self.fname)
@@ -45,7 +47,7 @@ class Tank:
 
     def load(self, fname = None):
         if fname != None:
-            self.fname = fname
+            self.fname = os.path.abspath(fname)
         try:
             f = open(self.fname, 'rb')
             tmp_dict = pickle.load(f)
@@ -62,7 +64,7 @@ class Tank:
 
     def load_txt(self, fname_txt = None):
         try:
-            f = open(fname_txt,'r')
+            f = open(os.path.abspath(fname_txt),'r')
             f.readline()
             vals = f.readline().split(' ')
             vals = np.array(vals, dtype = float)
@@ -70,7 +72,7 @@ class Tank:
             self.col_c = vals[1]
             self.r     = vals[2]
         except:
-            print("    Cannot locate %s!" % fname_txt)
+            print("    Cannot locate %s!" % os.path.abspath(fname_txt))
             exit()
 
 

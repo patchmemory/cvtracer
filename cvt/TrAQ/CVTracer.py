@@ -22,7 +22,7 @@ class CVTracer:
         self.trial          = trial
         self.fvideo_in      = trial.fvideo_raw
         self.fvideo_ext     = "mp4"
-        self.fvideo_out     = os.path.abspath("%s/traced.mp4" % trial.fdir)
+        self.fvideo_out     = os.path.join(trial.fpath, "traced.mp4")
         trial.fvideo_out    = self.fvideo_out
 
         # initialize video playback details
@@ -69,6 +69,7 @@ class CVTracer:
 
         # initialize lists for current and previous coordinates
         self.n_ind          = trial.group.n
+        print(" Group of %i" % self.n_ind)
         self.coord_now      = []
         self.coord_pre      = []
         self.ind_pre_now    = []
@@ -374,6 +375,7 @@ class CVTracer:
         clust_points = clust_points.reshape(clust_points.shape[0], clust_points.shape[2])
         # run KMeans clustering
         kmeans_init = 50
+        # if len(clust_points) > 0:
         kmeans = KMeans( n_clusters = self.n_ind, 
                          random_state = 0, 
                          n_init = kmeans_init ).fit(clust_points)
@@ -383,6 +385,9 @@ class CVTracer:
             x = int(tuple(cc)[0])
             y = int(tuple(cc)[1])
             self.coord_now.append([x,y,theta])
+        # else:
+        #     for i in range(self.trial.n):
+        #         self.coord_now.append([0,0,0])
     
     
     def trail_update(self):

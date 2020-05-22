@@ -30,7 +30,8 @@ class Trial:
     def setup(self, fvideo = None, n = 0, t = None, date = None, 
               fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
         self.fvideo_raw = os.path.abspath(fvideo)
-        if self.fvideo_raw.split('/')[-1] != self.fvideo_raw_std:
+        raw_filepath, raw_filename = os.path.split(self.fvideo_raw)
+        if raw_filename != self.fvideo_raw_std:
             print("        Reorganizing directory...")
             self.reorganize_files()
         else:
@@ -46,12 +47,12 @@ class Trial:
             self.fps         = fps
             self.frame_start = t_start * fps
             self.frame_end   = t_end   * fps
+        print(self.group.n, "individuals in trial")
 
 
     def parse_fname(self, date = None):
-        fname_tmp = self.fvideo_raw.split('/')[:-1]
-        fname_tmp.append(self.fname_std)
-        self.fname = '/'.join(fname_tmp)
+        self.fpath, fname_tmp = os.path.split(self.fvideo_raw)
+        self.fname = os.path.join(self.fpath, self.fname_std)
         
         # store the date of video
         if date != None:
@@ -59,13 +60,13 @@ class Trial:
             month = int(date[4:6])
             day   = int(date[6:8])
         else:
-            fdir  = self.fvideo_raw.split('/')[-2]
+            fdir = self.fpath.split(os.sep)[-1]
+            #fdir  = os.path.split(self.fvideo_raw.split('/')[-2]
             year  = int(fdir[ :4])
             month = int(fdir[4:6])
             day   = int(fdir[6:8])
 
         self._date = [ year, month, day ]
-        self.fdir = '/'.join(self.fvideo_raw.split('/')[:-1])
     
     def print_info(self):
         date_str = "%02i/%02i/%4i" % ( self._date[1], self._date[2], self._date[0] )
@@ -76,7 +77,11 @@ class Trial:
             print("       Known issues: " )
             for key in self.issue:
                 print("           %s: %s" % (key, self.issue[key]))
-    
+
+    def new_fname(self, _fn):
+        return os.path.join(self.fpath, _fn) 
+
+
     def save(self, fname = None):
         try:
             if fname != None:
@@ -399,7 +404,7 @@ class Trial:
         plt.legend()
         plt.tight_layout()
         if save:
-            fig_name = "%s/%s_hist_%s.png" % (self.fdir, val_name, tag)
+            fig_name = "%s/%s_hist_%s.png" % (self.fpath, val_name, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
@@ -421,7 +426,7 @@ class Trial:
         plt.legend()
         plt.tight_layout()
         if save:
-            fig_name = "%s/%s_hist_each_%s.png" % (self.fdir, val_name, tag)
+            fig_name = "%s/%s_hist_each_%s.png" % (self.fpath, val_name, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
@@ -440,7 +445,7 @@ class Trial:
         plt.colorbar()
         plt.tight_layout()
         if save:
-            fig_name = "%s/dw_thetaw_%s.png" % (self.fdir, tag)
+            fig_name = "%s/dw_thetaw_%s.png" % (self.fpath, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
@@ -459,7 +464,7 @@ class Trial:
         plt.colorbar()
         plt.tight_layout()
         if save:
-            fig_name = "%s/diw_miw_%s.png" % (self.fdir, tag)
+            fig_name = "%s/diw_miw_%s.png" % (self.fpath, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
@@ -478,7 +483,7 @@ class Trial:
         plt.colorbar()
         plt.tight_layout()
         if save:
-            fig_name = "%s/dij_mij_%s.png" % (self.fdir, tag)
+            fig_name = "%s/dij_mij_%s.png" % (self.fpath, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
@@ -512,7 +517,7 @@ class Trial:
         plt.legend()
         plt.tight_layout()        
         if save:
-            fig_name = "%s/valid_%s.png" % (self.fdir, tag)
+            fig_name = "%s/valid_%s.png" % (self.fpath, tag)
             plt.savefig(fig_name)
         else:
             plt.show()

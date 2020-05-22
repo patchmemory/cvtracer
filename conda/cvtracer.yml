@@ -13,6 +13,5 @@ dependencies:
   - pip:
     - opencv-python
     - sklearn
-    - pyqt5
     - argparse
 
