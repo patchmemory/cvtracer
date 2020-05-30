@@ -217,7 +217,6 @@ class CVTracer:
     def write_frame(self):
         if self.GPU:
             self.frame = cv2.UMat.get(self.frame)
-        
         self.out.write(self.frame)
 
         
@@ -248,6 +247,20 @@ class CVTracer:
                          % (t_hor, t_min % 60, t_sec % 60, t_csc % 100) )
         sys.stdout.flush()
         
+
+    # Show the current frame. Press any key or click "close" button to exit.
+    def show_current_frame(self):
+        if self.frame.shape[:2]!=(self.width,self.height):
+            self.frame = cv2.resize(self.frame,(self.width,self.height))
+        window_name = 'frame'
+        cv2.namedWindow(window_name)
+        cv2.moveWindow(window_name,0,0)
+        cv2.imshow(window_name,self.frame)
+        while True:
+            if cv2.waitKey(1)>0 or cv2.getWindowProperty(window_name,cv2.WND_PROP_VISIBLE)!=1:
+                break            
+        cv2.destroyAllWindows()
+        return 1
 
 
     ############################
@@ -618,6 +631,15 @@ class CVTracer:
         # draw contours in list 
         for i in self.contour_list: 
             cv2.drawContours(self.frame, self.contour_repeat, i, color, 2)
+
+
+    # Draw every contour (useful for detection quality control/parameter adjustment).
+    def draw_contours(self):
+        if self.RGB:
+            color = (0,0,255)
+        else:
+            color = 0
+        cv2.drawContours(self.frame,self.contours,-1,color,1)
 
 
     def draw_points(self):
