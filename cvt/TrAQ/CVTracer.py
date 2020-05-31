@@ -10,9 +10,11 @@ from scipy.spatial.distance import cdist
 from cvt.TrAQ.Trial import Trial
 from cvt.Analysis.Math import angle_diff
 
+return_key,esc_key,space_key = 13,27,32 # Key codes for return, esc, space (for cv2.waitKey).
 
 class CVTracer:
-
+    
+    
     def __init__(self, trial, frame_start = 0, frame_end = -1, 
                  n_pixel_blur = 3, block_size = 15, threshold_offset = 13, 
                  min_area = 20, max_area = 400, len_trail = 3,
@@ -223,9 +225,6 @@ class CVTracer:
     def post_frame(self):
         if ( self.online_viewer ):
             cv2.imshow('frame', self.frame) 
-            return_key = 13
-            esc_key    = 27 
-            space_key  = 32
             if cv2.waitKey(33) == esc_key:
                 return 0
             elif cv2.waitKey(33) == space_key:
@@ -250,14 +249,14 @@ class CVTracer:
 
     # Show the current frame. Press any key or click "close" button to exit.
     def show_current_frame(self):
-        if self.frame.shape[:2]!=(self.width,self.height):
-            self.frame = cv2.resize(self.frame,(self.width,self.height))
-        window_name = 'frame'
-        cv2.namedWindow(window_name)
+        window_name = 'current frame'
+        cv2.namedWindow(window_name,cv2.WINDOW_NORMAL)
         cv2.moveWindow(window_name,0,0)
-        cv2.imshow(window_name,self.frame)
+        cv2.resizeWindow(window_name,self.width,self.height)
         while True:
-            if cv2.waitKey(1)>0 or cv2.getWindowProperty(window_name,cv2.WND_PROP_VISIBLE)!=1:
+            cv2.imshow(window_name,self.frame)
+            if cv2.waitKey(1)==esc_key or \
+               cv2.getWindowProperty(window_name,cv2.WND_PROP_VISIBLE)!=1:
                 break            
         cv2.destroyAllWindows()
         return 1
