@@ -5,6 +5,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 from cvt.TrAQ.Trial import Trial
@@ -19,7 +20,8 @@ class CVTracer:
                  n_pixel_blur = 3, block_size = 15, threshold_offset = 13, 
                  min_area = 20, max_area = 400, len_trail = 3,
                  RGB = False, online = False, view_scale = 1, GPU = False,
-                 adaptiveMethod = 'gaussian', threshType = 'inv' ):
+                 adaptiveMethod = 'gaussian', threshType = 'inv', 
+                 MOG2 = False ):
 
         self.trial          = trial
         self.fvideo_in      = trial.fvideo_raw
@@ -33,6 +35,9 @@ class CVTracer:
         self.codec          = 'mp4v'
         if ( self.fvideo_ext == ".avi" ): self.codec = 'DIVX' 
         self.online_viewer  = online
+        self.online_window  = 'CVTracer live tracking'
+        if (self.online_viewer):
+            self.create_named_window(self.online_window)
         self.GPU            = GPU
 
         # initialize openCV video capture
@@ -43,6 +48,10 @@ class CVTracer:
         self.frame_end      = frame_end
         self.fps            = trial.fps
         self.init_video_capture()
+        if MOG2:
+            self.MOG2 = True
+            print("Using MOG2 Background Subtraction")
+            self.init_background_subtractor()
 
         # initialize contour working variables
         self.n_pix_avg      = n_pixel_blur
@@ -130,7 +139,7 @@ class CVTracer:
         sys.stdout.write("\t                                 adam patch, fau, jupiter 2019\n")
         sys.stdout.write("\t                              github.com/patchmemory/cv-tracer\n")
         sys.stdout.write(" \n\n")
-        sys.stdout.write("\t       Tracing %i fish using video, \n" % self.trial.group.n)
+        sys.stdout.write("\t       Tracing %i fish using video, \n" % self.n_ind)
         sys.stdout.write("\t         %s \n" % (self.trial.fvideo_raw))
         sys.stdout.write(" \n\n")
         sys.stdout.write("\t       Writing output to \n")
@@ -215,6 +224,11 @@ class CVTracer:
                 return True
         return False
 
+    def init_background_subtractor(self):
+        self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(
+                                    history=1000, 
+                                    varThreshold=25,
+                                    detectShadows=False)
 
     def write_frame(self):
         if self.GPU:
@@ -224,18 +238,21 @@ class CVTracer:
         
     def post_frame(self):
         if ( self.online_viewer ):
-            cv2.imshow('frame', self.frame) 
-            if cv2.waitKey(33) == esc_key:
+#            name = self.create_named_window()
+            name = self.online_window
+            cv2.imshow(name,self.frame)
+            k = self.wait_on_named_window(name,33)
+            if k==-2:
                 return 0
-            elif cv2.waitKey(33) == space_key:
-                while(True):
-                    k = cv2.waitKey(33)
-                    if k == return_key:
+            if k==space_key:
+                while True:
+                    k2 = self.wait_on_named_window(name,33)
+                    if k2==-2:
+                        return 0
+                    if k2==space_key:
                         break
-                    elif k == -1:
-                        continue
-        return 1
-
+            return 1
+ 
 
     def print_current_frame(self):
         t_csc = int(self.frame_num/self.fps * 100)
@@ -247,42 +264,9 @@ class CVTracer:
         sys.stdout.flush()
         
 
-    # Show the current frame. Press any key or click "close" button to exit.
-    def show_current_frame(self):
-        window_name = 'current frame'
-        cv2.namedWindow(window_name,cv2.WINDOW_NORMAL)
-        cv2.moveWindow(window_name,0,0)
-        cv2.resizeWindow(window_name,self.width,self.height)
-        while True:
-            cv2.imshow(window_name,self.frame)
-            if cv2.waitKey(1)==esc_key or \
-               cv2.getWindowProperty(window_name,cv2.WND_PROP_VISIBLE)!=1:
-                break            
-        cv2.destroyAllWindows()
-        return 1
-
-
     ############################
     # Contour functions
     ############################
-
-
-    def detect_contours(self):
-        self.threshold_detect()
-        # Note the [-2:] to specify the last two fields regardless of version
-        self.contours, hierarchy = cv2.findContours( self.thresh, 
-                                                     cv2.RETR_TREE, 
-                                                     cv2.CHAIN_APPROX_SIMPLE )[-2:]
-
-        # test found contours against area constraints
-        i = 0
-        while i < len(self.contours):
-            area = cv2.contourArea(self.contours[i])
-            if area < self.min_area or area > self.max_area:
-                del self.contours[i]
-            else:
-                i += 1
-
 
 
     def threshold_detect(self, hist = False):
@@ -317,6 +301,23 @@ class CVTracer:
                                              C = self.offset )
     
     
+    def detect_contours(self):
+        self.threshold_detect()
+        # Note the [-2:] to specify the last two fields regardless of version
+        self.contours, hierarchy = cv2.findContours( self.thresh, 
+                                                     cv2.RETR_TREE, 
+                                                     cv2.CHAIN_APPROX_SIMPLE )[-2:]
+
+        # test found contours against area constraints
+        i = 0
+        while i < len(self.contours):
+            area = cv2.contourArea(self.contours[i])
+            if area < self.min_area or area > self.max_area:
+                del self.contours[i]
+            else:
+                i += 1
+
+
     def analyze_contours(self):
         self.coord_pre = self.coord_now.copy()
         self.coord_now = []
@@ -452,7 +453,7 @@ class CVTracer:
     # those identified in the previous frame/s
     def connect_frames(self):
         # for initial frames, make "educated guesses" to at 
-        # least get the tracking startedstarted
+        # least get the tracking started
         if self.tracked_frames() < self.len_trail:
             self.kmeans_contours()
             if self.tracked_frames() > 1:
@@ -468,7 +469,8 @@ class CVTracer:
     def connect_coordinates(self):
         # if tracer found correct number of contours, assume proper tracing 
         # and connect to previous frame based on hugarian min-dist algorithm
-        if len(self.contours) == self.n_ind: self.reorder_hungarian()            
+        if len(self.contours) == self.n_ind:
+            self.reorder_hungarian()            
         # if tracer has not found correct number of contours, consider the
         # situation for special handling of frame-to-frame connections
         else:
@@ -565,13 +567,80 @@ class CVTracer:
         row_c = int(self.trial.tank.row_c) + 1
         col_c = int(self.trial.tank.col_c) + 1
         R     = int(self.trial.tank.r) + 1
-        if self.RGB:
-            tank_mask = np.zeros_like(self.frame)
-        else:
+        if self.GPU:
             tank_mask = cv2.UMat(np.zeros_like(self.frame))
+        else:
+            tank_mask = np.zeros_like(self.frame)
         
         cv2.circle(tank_mask, (row_c,col_c), R, (255, 255, 255), thickness=-1)
         self.frame = cv2.bitwise_and(self.frame, tank_mask)
+
+
+    def mask_background(self):
+        self.fgmask = self.bg_subtractor.apply(self.frame)
+        fgmask_bin = self.fgmask > 1
+        frame_nobg = np.full_like(self.frame,255) 
+        frame_nobg[fgmask_bin] = self.frame[fgmask_bin]
+        self.frame = frame_nobg
+        return
+
+
+    def detect_clusters(self, eps=2):
+        points = np.where(self.frame < 170)
+        points = np.stack(points, axis=-1)
+        points = np.float32(points)
+        fish = []
+        self.clust_center = []
+        self.clust_count = []
+        self.clust_points = []
+
+        if len(points) > self.trial.group.n:
+            db = DBSCAN(eps=eps, min_samples=self.trial.group.n).fit(points)
+            core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+            core_samples_mask[db.core_sample_indices_] = True
+            labels = db.labels_
+            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            n_noise_ = list(labels).count(-1) 
+            print("labels.shape ", labels.shape)
+            unique_labels = set(labels)
+            colors = [plt.cm.Spectral(each) for each in np.linspace(0,1, len(unique_labels))]
+            if n_clusters_ > 0:
+                print("n_cluster, n_noise = ", n_clusters_, n_noise_)
+            for k, col in zip(unique_labels, colors):
+                class_member_mask = (labels == k)
+                xy = points[class_member_mask & core_samples_mask]
+                self.clust_points.append(np.array(xy))
+
+        # test found contours against area constraints
+        i = 0
+        while i < len(self.clust_points):
+            area = len(self.clust_points[i])
+            if area < self.min_area or area > self.max_area:
+                del self.clust_points[i]
+            else:
+                i += 1
+        self.clust_points = np.array(self.clust_points)
+
+
+    def analyze_clusters(self):
+        self.coord_pre = self.coord_now.copy()
+        self.coord_now = []
+        for i in range(len(self.clust_count)):
+            # test found contours against area constraints
+            M = cv2.moments(self.clust_points[i])
+            if M['m00'] != 0:
+                cx   = M['m10'] / M['m00']
+                cy   = M['m01'] / M['m00']
+                mu20 = M['m20'] / M['m00'] - pow(cx,2)
+                mu02 = M['m02'] / M['m00'] - pow(cy,2)
+                mu11 = M['m11'] / M['m00'] - cx*cy
+            else:
+                cx = 0
+                cy = 0
+            ry = 2 * mu11
+            rx = mu20 - mu02
+            theta = 0.5 * np.arctan2(ry, rx)
+            self.coord_now.append([cx, cy, theta])
 
 
     def mask_contours(self):
@@ -583,15 +652,37 @@ class CVTracer:
             self.contour_masks.append(mask)
 
 
-
     ############################
     # Drawing functions
     ############################
 
+    def create_named_window(self,name='preview window'):
+        cv2.namedWindow(name,cv2.WINDOW_NORMAL)
+        cv2.moveWindow(name,0,0)
+        cv2.resizeWindow(name,800,800)
+        return name
     
+    # Wait for a set duration then return false if the window needs closing, 
+    # true otherwise.
+    def wait_on_named_window(self,name,delay=-1):
+        k = cv2.waitKey(delay)
+        if cv2.getWindowProperty(name,cv2.WND_PROP_VISIBLE)!=1 or k==esc_key:
+            return -2
+        return k
+        
+    # Show the current frame. Press any key or click "close" button to exit.
+    def show_current_frame(self):
+        window_name = self.create_named_window('current frame')
+        cv2.imshow(window_name,self.frame)
+        while self.wait_on_named_window(window_name,1)>=-1:
+            pass
+        cv2.destroyAllWindows()
+        return 1
+
+
     def draw(self):
         self.draw_tank(self.trial.tank)
-        if ( len(self.contour_list) != self.trial.group.n ):
+        if ( len(self.contour_list) != self.n_ind ):
             self.draw_contour_repeat()
         self.draw_points()
         self.draw_directors()

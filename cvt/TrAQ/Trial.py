@@ -13,7 +13,8 @@ from cvt.TrAQ.Tank import Tank
 class Trial:
     
     def __init__(self, fvideo = None, n = 0, t = None, date = None, 
-                 fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
+                 fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1, 
+                 reorganize = False):
 
         self.result = {}
         self.issue  = {}
@@ -25,17 +26,18 @@ class Trial:
         self.fvideo_out_std = 'traced.mp4'
     
         if fvideo != None:
-            self.setup(fvideo, n, t, date, fps, tank_radius, t_start, t_end)
+            self.setup(fvideo, n, t, date, fps, tank_radius, t_start, t_end, reorganize)
     
     def setup(self, fvideo = None, n = 0, t = None, date = None, 
-              fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1):
+              fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1, reorganize=False):
         self.fvideo_raw = os.path.abspath(fvideo)
         raw_filepath, raw_filename = os.path.split(self.fvideo_raw)
-        if raw_filename != self.fvideo_raw_std:
-            print("        Reorganizing directory...")
-            self.reorganize_files()
-        else:
-            print("        Directory organized properly.")
+        if reorganize:
+            if raw_filename != self.fvideo_raw_std:
+                print("        Reorganizing directory...")
+                self.reorganize_files()
+            else:
+                print("        Directory organized properly.")
             
         self.parse_fname(date)
         if not self.load():
