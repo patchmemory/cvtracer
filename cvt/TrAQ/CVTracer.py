@@ -11,7 +11,25 @@ from scipy.spatial.distance import cdist
 from cvt.TrAQ.Trial import Trial
 from cvt.Analysis.Math import angle_diff
 
+
 return_key,esc_key,space_key = 13,27,32 # Key codes for return, esc, space (for cv2.waitKey).
+
+default_window_size = 800,800
+
+def create_named_window(name='preview window'):
+    cv2.namedWindow(name,cv2.WINDOW_NORMAL)
+    cv2.moveWindow(name,0,0)
+    cv2.resizeWindow(name,default_window_size[0],default_window_size[1])
+    return name
+
+# Wait for a set duration then return false if the window needs closing, 
+# true otherwise.
+def wait_on_named_window(name,delay=-1):
+    k = cv2.waitKey(delay)
+    if cv2.getWindowProperty(name,cv2.WND_PROP_VISIBLE)!=1 or k==esc_key:
+        return -2
+    return k
+
 
 class CVTracer:
     
@@ -37,7 +55,7 @@ class CVTracer:
         self.online_viewer  = online
         self.online_window  = 'CVTracer live tracking'
         if (self.online_viewer):
-            self.create_named_window(self.online_window)
+            create_named_window(self.online_window)
         self.GPU            = GPU
 
         # initialize openCV video capture
@@ -236,17 +254,19 @@ class CVTracer:
         self.out.write(self.frame)
 
         
-    def post_frame(self):
+    def post_frame(self,delay=None):
+        if delay==None or delay<1:
+            delay = int(1000/self.fps)
         if ( self.online_viewer ):
-#            name = self.create_named_window()
+#            name = create_named_window()
             name = self.online_window
             cv2.imshow(name,self.frame)
-            k = self.wait_on_named_window(name,33)
+            k = wait_on_named_window(name,delay)
             if k==-2:
                 return 0
             if k==space_key:
                 while True:
-                    k2 = self.wait_on_named_window(name,33)
+                    k2 = wait_on_named_window(name,delay)
                     if k2==-2:
                         return 0
                     if k2==space_key:
@@ -656,25 +676,11 @@ class CVTracer:
     # Drawing functions
     ############################
 
-    def create_named_window(self,name='preview window'):
-        cv2.namedWindow(name,cv2.WINDOW_NORMAL)
-        cv2.moveWindow(name,0,0)
-        cv2.resizeWindow(name,800,800)
-        return name
-    
-    # Wait for a set duration then return false if the window needs closing, 
-    # true otherwise.
-    def wait_on_named_window(self,name,delay=-1):
-        k = cv2.waitKey(delay)
-        if cv2.getWindowProperty(name,cv2.WND_PROP_VISIBLE)!=1 or k==esc_key:
-            return -2
-        return k
-        
     # Show the current frame. Press any key or click "close" button to exit.
     def show_current_frame(self):
-        window_name = self.create_named_window('current frame')
+        window_name = create_named_window('current frame')
         cv2.imshow(window_name,self.frame)
-        while self.wait_on_named_window(window_name,1)>=-1:
+        while wait_on_named_window(window_name,1)>=-1:
             pass
         cv2.destroyAllWindows()
         return 1
