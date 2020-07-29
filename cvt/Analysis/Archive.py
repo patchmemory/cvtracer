@@ -11,7 +11,7 @@ import cvt.Analysis.Math as ana_math
 
 class Archive:
 
-    def __init__(self, fname = None)
+    def __init__(self, fname = None):
         self.trials = {}
         self.result = {}
 
