@@ -11,11 +11,14 @@ import cvt.Analysis.Math as ana_math
 
 class Archive:
 
-    def __init__(self):
+    def __init__(self, fname = None)
         self.trials = {}
         self.result = {}
 
         self.valid_speed_min = 0.5
+
+        if fname != None:
+            self.load(fname = fname)
 
     def save(self, fname = None):
         if fname != None:
