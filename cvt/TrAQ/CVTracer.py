@@ -263,15 +263,17 @@ class CVTracer:
             cv2.imshow(name,self.frame)
             k = wait_on_named_window(name,delay)
             if k==-2:
-                return 0
+                return False 
             if k==space_key:
                 while True:
                     k2 = wait_on_named_window(name,delay)
                     if k2==-2:
-                        return 0
+                        return False
                     if k2==space_key:
                         break
-            return 1
+            return True
+        else:
+            return True
  
 
     def print_current_frame(self):
@@ -475,7 +477,10 @@ class CVTracer:
         # for initial frames, make "educated guesses" to at 
         # least get the tracking started
         if self.tracked_frames() < self.len_trail:
-            self.kmeans_contours()
+            if len(self.contours) < 1:
+                self.random_coords()
+            else:
+                self.kmeans_contours()
             if self.tracked_frames() > 1:
                 self.reorder_hungarian()
         else:
@@ -484,6 +489,9 @@ class CVTracer:
         self.correct_theta()
         # once new coordinates have been determined, update trail
         self.trail_update()
+  
+    def random_coords(self):
+        self.coord_now = np.random.rand(self.n_ind,3)
     
     
     def connect_coordinates(self):
@@ -500,7 +508,7 @@ class CVTracer:
             # incorrectly identified contours
             else: self.handle_contour_issues()
                 
-            
+
     def handle_contour_issues(self):
         # first arrange data in structure to fit with cdist()
         self.coord_pre = self.predict_next()

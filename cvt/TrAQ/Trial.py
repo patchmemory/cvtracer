@@ -11,24 +11,24 @@ from cvt.TrAQ.Tank import Tank
 
 
 class Trial:
-    
-    def __init__(self, fvideo = None, n = 0, t = None, date = None, 
-                 fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1, 
+
+    def __init__(self, fvideo = None, n = 0, t = None, date = None,
+                 fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1,
                  reorganize = False):
 
         self.result = {}
         self.issue  = {}
-        
+
         self.cut_stats = {}
 
         self.fname_std = 'trial.pik'
         self.fvideo_raw_std = 'raw.mp4'
         self.fvideo_out_std = 'traced.mp4'
-    
+
         if fvideo != None:
             self.setup(fvideo, n, t, date, fps, tank_radius, t_start, t_end, reorganize)
-    
-    def setup(self, fvideo = None, n = 0, t = None, date = None, 
+
+    def setup(self, fvideo = None, n = 0, t = None, date = None,
               fps = 30, tank_radius = 111./2, t_start = 0, t_end = -1, reorganize=False):
         self.fvideo_raw = os.path.abspath(fvideo)
         raw_filepath, raw_filename = os.path.split(self.fvideo_raw)
@@ -38,24 +38,31 @@ class Trial:
                 self.reorganize_files()
             else:
                 print("        Directory organized properly.")
-            
+
         self.parse_fname(date)
         if not self.load():
             sys.stdout.write("\n        Generating new Trial object.\n")
             self.tank        = Tank(self.fvideo_raw, tank_radius)
             self.tank.locate()
             self.tank.r_cm   = tank_radius
-            self.group       = Group(int(n), t) 
+            self.group       = Group(int(n), t)
             self.fps         = fps
             self.frame_start = t_start * fps
             self.frame_end   = t_end   * fps
+
+        else:
+            self.fvideo_raw = os.path.abspath(fvideo)
+            self.fpath, _ = os.path.split(self.fvideo_raw)
+            self.fvideo_out = os.path.join(self.fpath, self.fvideo_out_std)
+            self.fname = os.path.join(self.fpath, self.fname_std )
+            self.tank.fname
         print(self.group.n, "individuals in trial")
 
 
     def parse_fname(self, date = None):
         self.fpath, fname_tmp = os.path.split(self.fvideo_raw)
         self.fname = os.path.join(self.fpath, self.fname_std)
-        
+
         # store the date of video
         if date != None:
             year  = int(date[0:4])
@@ -69,7 +76,7 @@ class Trial:
             day   = int(fdir[6:8])
 
         self._date = [ year, month, day ]
-    
+
     def print_info(self):
         date_str = "%02i/%02i/%4i" % ( self._date[1], self._date[2], self._date[0] )
         print("\n  %s, %2i %s" % ( date_str, self.group.n, self.group.t ) )
@@ -81,7 +88,7 @@ class Trial:
                 print("           %s: %s" % (key, self.issue[key]))
 
     def new_fname(self, _fn):
-        return os.path.join(self.fpath, _fn) 
+        return os.path.join(self.fpath, _fn)
 
 
     def save(self, fname = None):
@@ -104,7 +111,7 @@ class Trial:
             f = open(self.fname, 'rb')
             tmp_dict = pickle.load(f)
             f.close()
-            self.__dict__.update(tmp_dict) 
+            self.__dict__.update(tmp_dict)
             sys.stdout.write("\n        Trial loaded from %s \n" % self.fname)
             sys.stdout.flush()
             return True
@@ -129,7 +136,7 @@ class Trial:
             if not os.path.isdir(new_dir):
                 print("  Making new directory \n    %s" % new_dir)
                 os.mkdir(new_dir)
-                f_new = "%s/%s/%s" % (vpath_remain,new_dir,self.fvideo_raw_std)                
+                f_new = "%s/%s/%s" % (vpath_remain,new_dir,self.fvideo_raw_std)
                 print("  Moving\n    %s" % self.fvideo_raw)
                 print("  to\n    %s" % f_new)
                 os.rename( os.path.abspath(self.fvideo_raw),
@@ -146,7 +153,7 @@ class Trial:
     # experimental transformation functions
     #################################################
 
-    
+
     def convert_pixels_to_cm(self):
         sys.stdout.write("\n       Converting pixels to (x,y) space in (cm,cm).\n")
         sys.stdout.flush()
@@ -162,13 +169,13 @@ class Trial:
         #self.group.lens_transformation(A,B,C)
 
 
-    def generate_tag(self, frame_range = None, n_buffer_frames = 2, 
+    def generate_tag(self, frame_range = None, n_buffer_frames = 2,
                      ocut = None, vcut = None, wcut = None ):
 
         if frame_range == None:
-            frame_range = [ int(self.frame_start), int(self.frame_end) ]           
-        
-        tag = [ "t%02ito%02i" % ( int(frame_range[0]/self.fps/60.), 
+            frame_range = [ int(self.frame_start), int(self.frame_end) ]
+
+        tag = [ "t%02ito%02i" % ( int(frame_range[0]/self.fps/60.),
                                   int(frame_range[1]/self.fps/60.)  ) ]
         if ocut != None:
             tag.append("o%03.1f" % ocut)
@@ -178,12 +185,12 @@ class Trial:
             tag.append("w%05.1fto%05.1f" % (wcut[0],wcut[1]))
         if ocut != None or vcut != None or wcut != None:
             tag.append("nbf%i" % n_buffer_frames)
-        
+
         tag = '_'.join(tag)
 
         return tag
-    
-    
+
+
     def parse_tag_range(self, tag = "", tag_key = ""):
         split_tag = tag.split('_')
         val = None
@@ -197,29 +204,29 @@ class Trial:
                     val = float(entry)
         return val
 
-    
+
     def read_tag(self, tag):
-        
+
         tag_key = { 'time_range': 't',
-                    'ocut': 'o', 
-                    'vcut': 'v', 
-                    'wcut': 'w', 
+                    'ocut': 'o',
+                    'vcut': 'v',
+                    'wcut': 'w',
                     'n_buffer_frames': 'nbf' }
-        
+
         tag_val = {}
         for key in tag_key:
             tag_val[key] = self.parse_tag_range(tag, tag_key[key])
-        
+
         tag_val['frame_range'] = [0,0]
         tag_val['frame_range'][0] = tag_val['time_range'][0]*self.fps*60
         tag_val['frame_range'][1] = tag_val['time_range'][1]*self.fps*60
 
         return tag_val
-    
-    
-    def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2, 
+
+
+    def evaluate_cuts(self, frame_range = None, n_buffer_frames = 2,
                       ocut = None, vcut = None, wcut = None ):
-        
+
         if ocut != None:
             self.group.calculate_distance_alignment()
             self.group.cut_occlusion(ocut, n_buffer_frames)
@@ -228,9 +235,9 @@ class Trial:
         if wcut != None:
             self.group.cut_omega(self.fps, wcut, n_buffer_frames)
         self.group.cut_combine()
-        
+
         if frame_range == None:
-            frame_range = [ int(self.frame_start), int(self.frame_end) ]            
+            frame_range = [ int(self.frame_start), int(self.frame_end) ]
         mean, err = self.group.cut_stats(frame_range[0], frame_range[1])
         self.cuts_stats = { 'mean': mean, 'err': err }
         tag = self.generate_tag(frame_range, n_buffer_frames, ocut, vcut, wcut)
@@ -246,24 +253,24 @@ class Trial:
     def get_group_result(self, val_name, stat_name, tag = None):
         return self.group.get_result(val_name, stat_name, tag)
 
-    
+
     def get_individual_results(self, val_name, stat_name, tag = None):
         results = []
         for i in range(self.group.n):
             results.append(self.get_individual_result(i, val_name, stat_name, tag))
         return np.array(results)
 
-        
+
     def get_individual_result(self, i_fish, val_name, stat_name, tag = None):
         return self.group.fish[i_fish].get_result(val_name, stat_name, tag)
 
-    
+
     def clear_results(self, tag = None):
         self.group.clear_results(tag)
         for i in range(self.group.n):
             self.group.fish.clear_results(tag)
 
-        
+
     def summarize_statistics(self, tag = None):
         vals = [ 'dw', 'speed', 'omega' ]
         stat_names = [ 'mean', 'stdd', 'kurt', 'hist' ]
@@ -274,12 +281,12 @@ class Trial:
                 result = self.get_group_result(val,stat,tag)
                 if stat == 'hist':
                     for i in range(len(result)):
-                        print( "    %i \t%4.2e \t%4.2e " % 
+                        print( "    %i \t%4.2e \t%4.2e " %
                                               (i, result[i][0], result[i][1]) )
                 else:
                     print( "    %s \t%4.2e \t%4.2e " % (stat, result[0], result[1]) )
                 print("\n")
-        print("\n")      
+        print("\n")
 
 
 
@@ -288,7 +295,7 @@ class Trial:
     #################################################
 
 
-    def calculate_kinematics(self):           
+    def calculate_kinematics(self):
         sys.stdout.write("\n       Calculating kinematics...\n")
         sys.stdout.flush()
         self.group.calculate_dwall(self.tank.r_cm)
@@ -298,18 +305,18 @@ class Trial:
         self.group.calculate_angular_velocity(self.fps)
         self.group.calculate_angular_acceleration(self.fps)
         self.group.calculate_local_acceleration(self.fps)
-        self.save()          
+        self.save()
         sys.stdout.write("\n")
         sys.stdout.write("       ... kinematics calculated for Trial and saved in\n")
         sys.stdout.write("             %s \n" % self.fname)
         sys.stdout.flush()
 
 
-    def calculate_tank_crossing(self):           
+    def calculate_tank_crossing(self):
         sys.stdout.write("\n       Calculating tank crossings...\n")
         sys.stdout.flush()
         self.group.calculate_tank_crossing(self.tank.r_cm)
-        self.save()          
+        self.save()
         sys.stdout.write("\n")
         sys.stdout.write("       ... tank crossings calculated for Trial and saved in\n")
         sys.stdout.write("             %s \n" % self.fname)
@@ -324,11 +331,11 @@ class Trial:
         sys.stdout.write("       ... done \n")
 
 
-    def gather_wall_distance_orientation(self, frame_range = None, 
+    def gather_wall_distance_orientation(self, frame_range = None,
                            ocut = False, vcut = False, wcut = False,
                            tag = None):
         sys.stdout.write("       Collecting wall info according to cuts... \n")
-        self.group.collect_wall_distance_orientation(frame_range = frame_range, 
+        self.group.collect_wall_distance_orientation(frame_range = frame_range,
                                            ocut = ocut, vcut = vcut, wcut = wcut)
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
@@ -343,11 +350,11 @@ class Trial:
         sys.stdout.write("       ... done \n")
 
 
-    def gather_wall_distance_alignment(self, frame_range = None, 
+    def gather_wall_distance_alignment(self, frame_range = None,
                            ocut = False, vcut = False, wcut = False,
                            tag = None):
         sys.stdout.write("       Collecting wall info according to cuts... \n")
-        self.group.collect_wall_distance_alignment(frame_range = frame_range, 
+        self.group.collect_wall_distance_alignment(frame_range = frame_range,
                                            ocut = ocut, vcut = vcut, wcut = wcut)
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
@@ -361,35 +368,35 @@ class Trial:
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
 
-        
-    def gather_pairwise(self, frame_range = None, 
+
+    def gather_pairwise(self, frame_range = None,
                            ocut = False, vcut = False, wcut = False,
                            tag = None):
         sys.stdout.write("       Collecting pair info according to cuts... \n")
-        self.group.collect_distance_alignment(frame_range = frame_range, 
+        self.group.collect_distance_alignment(frame_range = frame_range,
                                               ocut = ocut, vcut = vcut, wcut = wcut)
         sys.stdout.write("\n")
         sys.stdout.write("       ... done \n")
         self.plot_distance_alignment(tag)
 
 
-    def calculate_statistics(self, 
-                             val_name  = [ 'dwall', 'speed', 'omega' ], 
-                             val_range = [    None,    None,    None ], 
+    def calculate_statistics(self,
+                             val_name  = [ 'dwall', 'speed', 'omega' ],
+                             val_range = [    None,    None,    None ],
                              val_symm  = [   False,   False,    True ],
                              val_bins  = [     100,     100,     100 ],
-                             frame_range = None, 
+                             frame_range = None,
                              ocut = False, vcut = False, wcut = False, tag = None):
-        
+
         for i in range(len(val_name)):
             self.group.calculate_stats(val_name[i], val_range[i], val_symm[i],
                         frame_range = frame_range, nbins = val_bins[i],
                         ocut = ocut, vcut = vcut, wcut = wcut, tag = tag )
             self.plot_hist(val_name[i], tag)
             self.plot_hist_each(val_name[i], tag)
-        
-    
-    
+
+
+
     #################################################
     # plot functions
     #################################################
@@ -411,13 +418,13 @@ class Trial:
         else:
             plt.show()
         plt.clf()
-        
-        
+
+
     def plot_hist_each(self, val_name, tag = None, save = True):
         hist = self.get_individual_results(val_name, 'hist', tag)
         color_set = plt.rcParams['axes.prop_cycle'].by_key()['color']
         i = 0
-        for h in hist: 
+        for h in hist:
             mean = self.get_individual_result(i, val_name, 'mean', tag)
             i += 1
             c = color_set[i%len(color_set)]
@@ -433,16 +440,16 @@ class Trial:
         else:
             plt.show()
         plt.clf()
-  
+
 
     def plot_wall_distance_orientation(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
         my_cmap.set_bad(my_cmap.colors[0])
-        
+
         plt.ylabel(r"Orientation ($\theta_{i,w}$)")
         plt.xlabel("Distance (cm)")
         plt.hist2d( self.group.dw_thetaw[:,0], self.group.dw_thetaw[:,1],
-                    bins=100, range=[[0,self.tank.r_cm],[-np.pi,np.pi]], 
+                    bins=100, range=[[0,self.tank.r_cm],[-np.pi,np.pi]],
                     norm = colors.LogNorm(), cmap = my_cmap )
         plt.colorbar()
         plt.tight_layout()
@@ -451,17 +458,17 @@ class Trial:
             plt.savefig(fig_name)
         else:
             plt.show()
-        plt.clf()      
+        plt.clf()
 
 
     def plot_wall_distance_alignment(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
         my_cmap.set_bad(my_cmap.colors[0])
-        
+
         plt.ylabel(r"Alignment ($\cos\theta_{ij}$)")
         plt.xlabel("Distance (cm)")
         plt.hist2d( self.group.diw_miw[:,0], self.group.diw_miw[:,1],
-                    bins=100, range=[[0,self.tank.r_cm],[-1,1]], 
+                    bins=100, range=[[0,self.tank.r_cm],[-1,1]],
                     norm = colors.LogNorm(), cmap = my_cmap )
         plt.colorbar()
         plt.tight_layout()
@@ -470,17 +477,17 @@ class Trial:
             plt.savefig(fig_name)
         else:
             plt.show()
-        plt.clf()      
+        plt.clf()
 
 
     def plot_distance_alignment(self, tag = None, save = True):
         my_cmap = copy.copy(mpl_cm.get_cmap('viridis'))
         my_cmap.set_bad(my_cmap.colors[0])
-        
+
         plt.ylabel(r"Alignment ($\cos\theta_{ij}$)")
         plt.xlabel("Distance (cm)")
         plt.hist2d(self.group.dij_mij[:,0], self.group.dij_mij[:,1],
-                   bins=100, range=[[0,self.tank.r_cm],[-1,1]], 
+                   bins=100, range=[[0,self.tank.r_cm],[-1,1]],
                    norm = colors.LogNorm(), cmap = my_cmap)
         plt.colorbar()
         plt.tight_layout()
@@ -489,8 +496,8 @@ class Trial:
             plt.savefig(fig_name)
         else:
             plt.show()
-        plt.clf()      
-       
+        plt.clf()
+
 
     def plot_valid(self, frame_range = None, tag = None, save = True):
         cuts = [ 'ocut', 'vcut', 'wcut', 'cut']
@@ -505,7 +512,7 @@ class Trial:
             for cut in cuts:
                 valid[i].append(valid[cut][i])
             valid[i] = np.array(valid[i])
-   
+
         gutter = 0.1
         bar_width = ( 1 - gutter ) / self.group.n
         opacity = 0.8
@@ -517,10 +524,16 @@ class Trial:
         plt.xticks(index + 0.5 - 0.5*gutter, cuts)
         plt.ylim([0,1])
         plt.legend()
-        plt.tight_layout()        
+        plt.tight_layout()
         if save:
             fig_name = "%s/valid_%s.png" % (self.fpath, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
         plt.clf()
+
+
+    def frac_active(self, frame_range, vmin = 1):
+        active = self.group.frac_active(frame_range, vmin=vmin)
+        print("trial active:", active)
+        return np.nanmean(active), np.nanstd(active) / np.sqrt(len(active))

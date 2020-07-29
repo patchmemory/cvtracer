@@ -5,8 +5,8 @@ import copy
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-from TrAQ.Trial import Trial
-import Analysis.Math as ana_math
+from cvt.TrAQ.Trial import Trial
+import cvt.Analysis.Math as ana_math
 
 
 class Archive:
@@ -179,12 +179,15 @@ class Archive:
                 key = val + stat
                 print(" key, len(stat_list): ", key, len(self.stat_list[key]))
 
-                if stat == 'hist':
-                    stat_result = ana_math.mean_and_err_hist(self.stat_list[key], val_bins[i])
-                else:
-                    stat_result = ana_math.mean_and_err(self.stat_list[key])
-                    
-                self.store_result(t, n, stat_result, val, stat, tag)
+                try:
+                    if stat == 'hist':
+                        stat_result = ana_math.mean_and_err_hist(self.stat_list[key], val_bins[i])
+                    else:
+                        stat_result = ana_math.mean_and_err(self.stat_list[key])
+                        
+                    self.store_result(t, n, stat_result, val, stat, tag)
+                except:
+                    print("  ERROR: Could not calculate %s %s" % (val, self.stat_list[key]))
 
         return tag, exceptions
 

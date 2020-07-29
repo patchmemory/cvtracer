@@ -28,8 +28,8 @@ t_end = 30*60 # min
 fps = 30
 frame_range = [ t_start*fps, t_end*fps  ]
 
-ns   = [ 1, 2, 5, 10 ]
-ts   = [ "SF", "Pa", "Ti", "Mo" ]
+ns   = [ 1, 10 ]
+ts   = [ "SF" ]
 
 val_names = [ "dwall", "speed", "omega" ]
 
@@ -72,7 +72,9 @@ for t in ts:
                                         n_buffer_frames = args.n_buffer_frames,
                                         ocut = ocut, vcut = vcut, wcut = wcut )
         all_exceptions.extend(exceptions)
-        fname = "analysis_%s.arc" % tag
+        tag_str = tag + "_dark"
+        print(tag, tag_str)
+        fname = "analysis_%s.arc" % tag_str
         arc.save(fname)
         for val_name in val_names:
             arc.plot_hist(t, n, val_name, tag)

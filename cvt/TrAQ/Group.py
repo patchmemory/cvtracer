@@ -4,7 +4,7 @@ from cvt.TrAQ.Individual import Individual
 from cvt.Analysis import Math as ana_math
 
 
-class Group: 
+class Group:
 
     def __init__(self, n, t):
 
@@ -44,10 +44,10 @@ class Group:
             coords.append(individual.coordinates(index))
         return coords
 
-    # Functions for storing and recalling results    
+    # Functions for storing and recalling results
     def result_key(self, val_name, stat_name, tag = None):
         return "%s_%s_%s" % (val_name, stat_name, tag)
-    
+
     def store_result(self, result, val_name, stat_name, tag = None):
         key = self.result_key(val_name, stat_name, tag)
         self.result[key] = result
@@ -113,12 +113,18 @@ class Group:
 
     def valid_frame_fraction(self, frame_range = None, cut_name = 'cut'):
         valid = []
-        for i_fish in range(self.n_fish()):    
+        for i_fish in range(self.n_fish()):
             valid.append(self.fish[i_fish].valid_frame_fraction(frame_range, cut_name))
         return np.array(valid)
-    
-    
-    # cut_occlusion(...) generates a list of frames to be cut for being too close 
+
+    def frac_active(self, frame_range = None, vmin = 1):
+        active = []
+        for i_fish in range(self.n_fish()):
+            active.append(self.fish[i_fish].frac_active(frame_range,vmin=vmin))
+        active = np.array(active)
+        return active
+
+    # cut_occlusion(...) generates a list of frames to be cut for being too close
     # (occluded fish are set with same position, so d_ij = 0)
     def cut_occlusion(self, d_min = 0, n_buffer_frames = 2):
         print("\n\n  Generating occlusion cut using min d_nn = %4.2f cm with %i buffer frames"
@@ -128,7 +134,7 @@ class Group:
                 self.dij_mij
             except:
                 self.calculate_distance_alignment()
-                
+
             for i_fish in range(self.n_fish()):
                 distance_nn = np.array(self.fish[i_fish].get_dij_mij(1))
                 distance_nn = distance_nn[:,0]
@@ -141,7 +147,7 @@ class Group:
 
     # cut_omega(...) generates list of frames to be cut based on their angular speed
     def cut_omega(self, fps = 30, omega_range = [ -40., 40. ], n_buffer_frames = 2):
-        print("\n\n  Generating angular speed cut using range [%4.2f, %4.2f] rad/s with %i buffer frames" 
+        print("\n\n  Generating angular speed cut using range [%4.2f, %4.2f] rad/s with %i buffer frames"
                                                % (omega_range[0], omega_range[1], n_buffer_frames))
         for i_fish in range(self.n_fish()):
             print("    ... for fish %i, " % i_fish)
@@ -149,7 +155,7 @@ class Group:
 
     # cut_speed(...) generates list of frames to be cut based on their speed
     def cut_speed(self, fps = 30, speed_range = [ 1., 100. ], n_buffer_frames=2):
-        print("\n\n  Generating speed cut using range [%4.2f, %4.2f] cm/s with %i buffer frames" 
+        print("\n\n  Generating speed cut using range [%4.2f, %4.2f] cm/s with %i buffer frames"
                                                % (speed_range[0], speed_range[1], n_buffer_frames))
         for i_fish in range(self.n_fish()):
             print("    ... for fish %i, " % i_fish)
@@ -178,7 +184,7 @@ class Group:
             valid[key] = np.array(valid[key])
             mean[key]  = np.mean(valid[key])
             err[key]   = np.std(valid[key])/np.sqrt(len(valid[key]))
-        
+
         return mean, err
 
 
@@ -213,7 +219,7 @@ class Group:
             self.dw_thetaw.extend(_dw_thetaw[i_fish])
         self.dw_thetaw = np.array(self.dw_thetaw)
 
-    def collect_wall_distance_orientation(self, frame_range = None, 
+    def collect_wall_distance_orientation(self, frame_range = None,
                                    ocut = False, vcut = False, wcut = False):
         self.dw_thetaw = []
         for i_fish in range(self.n_fish()):
@@ -247,7 +253,7 @@ class Group:
             self.diw_miw.extend(_diw_miw[i_fish])
         self.diw_miw = np.array(self.diw_miw)
 
-    def collect_wall_distance_alignment(self, frame_range = None, 
+    def collect_wall_distance_alignment(self, frame_range = None,
                                    ocut = False, vcut = False, wcut = False):
         self.diw_miw = []
         for i_fish in range(self.n_fish()):
@@ -290,17 +296,17 @@ class Group:
             self.fish[i_fish].set_dij_mij(_dij_mij[i_fish])
             self.dij_mij.extend(_dij_mij[i_fish])
         self.dij_mij = np.array(self.dij_mij)
-            
-            
-    def collect_distance_alignment(self, frame_range = None, 
+
+
+    def collect_distance_alignment(self, frame_range = None,
                                    ocut = False, vcut = False, wcut = False):
         self.dij_mij = []
         for i_fish in range(self.n_fish()):
-            _dij_mij = self.fish[i_fish].get_dij_mij(self.n_fish()-1, frame_range, 
+            _dij_mij = self.fish[i_fish].get_dij_mij(self.n_fish()-1, frame_range,
                                                      ocut, vcut, wcut)
             self.dij_mij.extend(_dij_mij)
         self.dij_mij = np.array(self.dij_mij)
-        
+
 
     def neighbor_bouts(self, d_cut = 10, frame_range = None,
                        ocut = False, vcut = False, wcut = False):
@@ -313,12 +319,12 @@ class Group:
                 #print("  Issue gathering nearest neighbor bouts.")
         return neighbor_bouts
 
-    def nearest_neighbor_distance_frame(self,i_frame): 
+    def nearest_neighbor_distance_frame(self,i_frame):
         print("i-frame=",i_frame)
         for i_fish in range(self.n_fish()):
             print("i-fish=",i_fish)
             print(self.dij_mij[i_fish][i_frame][0])
-  
+
 
     def print_nn_dist_stats(self):
         print("  Mean NN Distance = %f cm" % np.mean(self.nn_dist))
@@ -327,7 +333,7 @@ class Group:
         print("                     %f std. body length" % (np.median(self.nn_dist)/self.std_body_length))
 
 
-    def nearest_neighbor_distance(self,framei,framef): 
+    def nearest_neighbor_distance(self,framei,framef):
         self.nn_dist = []
         for i_frame in range(framei,framef):
             for i_fish in range(self.n_fish()):
@@ -342,14 +348,14 @@ class Group:
 
     def plot_nn_dist(self):
         print("  Plotting nearest neighbor distance... ")
-        plt.title("Histogram of nearest neighbor distance")  
-        plt.ylabel("Normalized count")  
-        plt.xlabel("Nearest neighbor distance (cm)") 
+        plt.title("Histogram of nearest neighbor distance")
+        plt.ylabel("Normalized count")
+        plt.xlabel("Nearest neighbor distance (cm)")
         plt.hist(self.nn_dist/self.std_body_length,bins=100,density=True)
         plt.show()
 
     def neighbor_distance(self,framei,framef):
-        n_dist = [] 
+        n_dist = []
         for i_frame in range(framei,framef):
             for i_fish in range(self.n_fish()):
                 n_list = self.dij_mij[i_fish][i_frame]
@@ -366,23 +372,23 @@ class Group:
         print(" length of n_dist array, zeros removed= ",len(n_dist))
         self.std_body_length = 5
         print("  Mean N Distance = %f cm" % np.mean(n_dist))
-        print("                     %f std. body length" % 
+        print("                     %f std. body length" %
                                         (np.mean(n_dist)/self.std_body_length))
         print("  Median N Distance = %f cm" % np.median(n_dist))
-        print("                     %f std. body length" % 
+        print("                     %f std. body length" %
                                       (np.median(n_dist)/self.std_body_length))
         return n_dist
 
 
-    # calculate_stats(...) takes the name of a value and calculates its 
-    # statistics across individuals in the group. User can specify a range of 
-    # values and a range of time, along with whether or not to use speed and 
-    # occlusion cuts. Also has option to make data symmetric about the origin, 
+    # calculate_stats(...) takes the name of a value and calculates its
+    # statistics across individuals in the group. User can specify a range of
+    # values and a range of time, along with whether or not to use speed and
+    # occlusion cuts. Also has option to make data symmetric about the origin,
     # for use with angular speed statistics.
     def calculate_stats(self, val_name, val_range = None, val_symm = False,
                         frame_range = None, nbins = 100,
                         ocut = False, vcut = False, wcut = False, tag = None ):
-        
+
         stat_keys = [ "mean", "stdd", "kurt", "hist" ]
         stat_list = {}
         for key in stat_keys:
@@ -394,11 +400,10 @@ class Group:
                                                ocut = ocut, vcut = vcut, wcut = wcut, tag = tag)
             for key in stat_keys:
                 stat_list[key].append(self.fish[i_fish].get_result(val_name,key,tag))
-    
+
         for key in stat_keys:
             if key == 'hist':
                 stat_result = ana_math.mean_and_err_hist(stat_list[key], nbins)
             else:
                 stat_result = ana_math.mean_and_err(stat_list[key])
             self.store_result(stat_result, val_name, key, tag)
-            

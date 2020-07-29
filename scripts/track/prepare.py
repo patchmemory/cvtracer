@@ -1,10 +1,10 @@
 #!/usr/bin/python
 import sys
-cvhome="/home/patch/Code/cvtracer"
-sys.path.insert(0, cvhome)
 import os
 import argparse
-from TrAQ.Trial import Trial
+cvhome=os.path.join(os.path.abspath('.'),'cvtracer')
+sys.path.insert(0, cvhome)
+from cvt.TrAQ.Trial import Trial
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="cv-tracer Trial")
