@@ -20,6 +20,9 @@ class Archive:
         if fname != None:
             self.load(fname = fname)
 
+    def __del__(self):
+        del self.__dict__
+
     def save(self, fname = None):
         if fname != None:
             self.fname = fname
@@ -40,7 +43,7 @@ class Archive:
             f = open(self.fname, 'rb')
             tmp_dict = pickle.load(f)
             f.close()
-            self.__dict__.update(tmp_dict) 
+            self.__dict__.update(tmp_dict)
             sys.stdout.write("\n        Archive loaded from %s \n" % self.fname)
             sys.stdout.flush()
             return True
@@ -51,8 +54,8 @@ class Archive:
     # Functions for storing and recalling trials
     def trial_key(self, t, n):
         return "%s_%02i" % (t, n)
-    
-    
+
+
     def trial_list(self, t, n):
         return self.trials[self.trial_key(t,n)]
 
@@ -62,7 +65,7 @@ class Archive:
 
 
     def print_trial_list(self, t, n):
-        for _trial in self.trials[self.trial_key(t, n)]:            
+        for _trial in self.trials[self.trial_key(t, n)]:
             _trial.print_info()
 
 
@@ -97,7 +100,7 @@ class Archive:
     # some functions for storing and retrieving results
     #####################################################
 
-    # Functions for storing and recalling results    
+    # Functions for storing and recalling results
     def result_key(self, t, n, val_name, stat_name, tag = None):
         return "%s_%02i_%s_%s_%s" % (t, n, val_name, stat_name, tag)
 
@@ -107,7 +110,7 @@ class Archive:
     def store_result(self, t, n, result, val_name, stat_name, tag = None):
         key = self.result_key(t, n, val_name, stat_name, tag)
         self.result[key] = result
-        
+
     def print_result(self,key):
         print(key,self.result[key])
 
@@ -115,24 +118,24 @@ class Archive:
         for key in self.result:
             self.print_result(key)
 
- 
+
     # Combine results of val_name over val_range given a (t,n) pair
     def calculate_statistics(self, t, n,
-                             val_name  = [ 'dwall', 'speed', 'omega' ], 
-                             val_range = [    None,    None,    None ], 
+                             val_name  = [ 'dwall', 'speed', 'omega' ],
+                             val_range = [    None,    None,    None ],
                              val_symm  = [   False,   False,    True ],
                              val_bins  = [     100,     100,     100 ],
                              frame_range = None, n_buffer_frames = 2,
                              ocut = False, vcut = False, wcut = False):
 
-        
+
         stat_keys = [ "mean", "stdd", "kurt", "hist" ]
         self.stat_list = {}
-        
+
         for val in val_name:
             for stat in stat_keys:
                 key = val + stat
-                self.stat_list[key] = []        
+                self.stat_list[key] = []
 
         inactive = []
         exceptions = []
@@ -145,16 +148,19 @@ class Archive:
                                               0, val_range[1], val_range[2])
 
                 # test to make sure trial has enough active time
-                if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
-    
-                    trial.calculate_statistics( val_name, val_range, val_symm, val_bins, 
+                _inactive = trial.inactive_frames(vmin=val_range[1][0], frame_range=frame_range)
+                print(f"{_inactive} frames")
+                if  _inactive < self.valid_speed_min:
+                # if trial.cuts_stats['mean']['vcut'] >= self.valid_speed_min:
+
+                    trial.calculate_statistics( val_name, val_range, val_symm, val_bins,
                                             frame_range, ocut, vcut, wcut, tag)
                     for val in val_name:
                         for stat in stat_keys:
                             key = val + stat
                             self.stat_list[key].append(trial.group.get_result(val, stat, tag))
                             print(" key, len(stat_list): ", key, len(self.stat_list[key]))
-    
+
                 else:
                     print("\n\n")
                     print("    Warning! Trial has too few valid frames. ")
@@ -187,7 +193,7 @@ class Archive:
                         stat_result = ana_math.mean_and_err_hist(self.stat_list[key], val_bins[i])
                     else:
                         stat_result = ana_math.mean_and_err(self.stat_list[key])
-                        
+
                     self.store_result(t, n, stat_result, val, stat, tag)
                 except:
                     print("  ERROR: Could not calculate %s %s" % (val, self.stat_list[key]))
@@ -216,8 +222,8 @@ class Archive:
         else:
             plt.show()
         plt.clf()
-        
-        
+
+
     def plot_hist_each_group(self, t, n, val_name, tag = None, save = True):
         hist = []
         mean = []
@@ -240,7 +246,7 @@ class Archive:
                     print("\n\n")
                     print("    Warning! Issue gathering results from: ")
 
-                
+
         color_set = plt.rcParams['axes.prop_cycle'].by_key()['color']
         for i in range(len(hist)):
             h = hist[i]
@@ -257,8 +263,8 @@ class Archive:
         else:
             plt.show()
         plt.clf()
-        
-        
+
+
     def plot_valid(self, t, n, frame_range = None, tag = None, save = True):
         cuts = [ 'ocut', 'vcut', 'wcut', 'cut']
         valid = { cut: [] for cut in cuts}
@@ -276,7 +282,7 @@ class Archive:
                     print("    Trial has enough active frames for analysis. ")
                     trial.print_info()
                     # for cut in cuts:
-                    #     valid_tmp = trial.group.valid_frame_fraction(frame_range, 
+                    #     valid_tmp = trial.group.valid_frame_fraction(frame_range,
                     #                                                  cut_name = cut)
                     #     valid[cut].append(np.nanmean(valid_tmp))
                 else:
@@ -290,7 +296,7 @@ class Archive:
                 print("    Warning! Issue gathering results from: ")
                 trial.print_info()
 
-                
+
         index = np.arange(len(cuts))
         #n_trials = len(self.trials[self.trial_key(t,n)])
         n_trials = len(valid['cut'])
@@ -299,7 +305,7 @@ class Archive:
             for cut in cuts:
                 valid[i].append(valid[cut][i])
             valid[i] = np.array(valid[i])
-   
+
         gutter = 0.1
         bar_width = ( 1 - gutter ) / n_trials
         opacity = 0.8
@@ -311,11 +317,10 @@ class Archive:
         plt.xticks(index + 0.5 - 0.5*gutter, cuts)
         plt.ylim([0,1])
         plt.legend()
-        plt.tight_layout()        
+        plt.tight_layout()
         if save:
             fig_name = "results/%s_n%02i_valid_by_group_%s.png" % (t, n, tag)
             plt.savefig(fig_name)
         else:
             plt.show()
         plt.clf()
-

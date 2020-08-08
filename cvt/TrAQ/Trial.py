@@ -244,6 +244,15 @@ class Trial:
         self.plot_valid(frame_range = frame_range, tag = tag)
         return tag
 
+    def inactive_frames(self, vmin = 1, frame_range=None, n_buffer_frames = 2):
+        _fracs = []
+        for i in range(self.group.n):
+            _speed = np.array(self.group.fish[i].df['speed'][frame_range[0]:frame_range[1]])
+            _frac = len(_speed[_speed < vmin])/len(_speed)
+            _fracs.append(_frac)
+        return np.mean(_fracs)
+
+
 
     ######################################################
     # some functions for storing and retrieving results
